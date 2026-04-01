@@ -1,7 +1,7 @@
 // i18n.js — Internationalization with i18next + browser language detection
 
-import i18next from './node_modules/i18next/dist/esm/i18next.js';
-import LanguageDetector from './node_modules/i18next-browser-languagedetector/dist/esm/i18nextBrowserLanguageDetector.js';
+import i18next from 'https://esm.sh/i18next@26';
+import LanguageDetector from 'https://esm.sh/i18next-browser-languagedetector@8';
 
 import en from './locales/en.json' with { type: 'json' };
 import de from './locales/de.json' with { type: 'json' };
