@@ -4,20 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LaTeX Math Editor</title>
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fira+Code:wght@400;500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header class="hero">
-        <h1>LaTeX Math Editor</h1>
-        <p class="subtitle">Type a formula. See it rendered live. Fully accessible.</p>
+        <h1>LaTeX <span class="accent">Math Editor</span></h1>
+        <p class="subtitle">The accessible bridge between sighted and visually impaired peers.</p>
     </header>
 
     <div class="editor" role="group" aria-label="Math formula editor">
         <!-- Upper section: MathML display + toolbar -->
         <section class="editor-upper mode-inactive">
-            <label class="section-label">Visual MathML editing</label>
+            <label class="section-label">Visual Domain (MathML)</label>
             <div id="math-display" class="math-display" tabindex="0" aria-hidden="true">
-                <span class="placeholder" id="placeholder">Click here to navigate the rendered formula</span>
+                <span class="placeholder" id="placeholder">Select here to navigate the rendered formula</span>
                 <span class="cursor" id="cursor"></span>
             </div>
             <div class="math-toolbar" id="math-toolbar" role="toolbar" aria-label="Insert math structures">
@@ -33,7 +37,7 @@
 
         <!-- Lower section: LaTeX source + suggestions -->
         <section class="editor-lower">
-            <label class="section-label" for="latex-src">Linear LaTeX editing</label>
+            <label class="section-label" for="latex-src">Source Domain</label>
             <div class="source-row">
                 <input type="text"
                        id="latex-src"
