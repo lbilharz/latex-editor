@@ -455,9 +455,9 @@ document.querySelectorAll('.math-toolbar button[data-insert]').forEach(btn => {
 
 // ── Example Buttons ──
 
-document.querySelectorAll('.example-grid button').forEach(btn => {
+document.querySelectorAll('.example-grid button[data-latex]').forEach(btn => {
     btn.addEventListener('click', () => {
-        input.value = btn.textContent;
+        input.value = btn.dataset.latex;
         input.focus();
         input.setSelectionRange(input.value.length, input.value.length);
         lastValue = '';
@@ -465,6 +465,21 @@ document.querySelectorAll('.example-grid button').forEach(btn => {
         suggestions.innerHTML = '';
     });
 });
+
+// ── Show More Examples ──
+
+const showMoreBtn = document.getElementById('show-more-examples');
+const moreExamples = document.getElementById('example-grid-more');
+if (showMoreBtn && moreExamples) {
+    showMoreBtn.addEventListener('click', () => {
+        const isHidden = moreExamples.hidden;
+        moreExamples.hidden = !isHidden;
+        showMoreBtn.textContent = isHidden ? 'Show fewer examples' : 'Show all 17 examples';
+        showMoreBtn.setAttribute('aria-expanded', String(isHidden));
+    });
+    showMoreBtn.setAttribute('aria-expanded', 'false');
+    showMoreBtn.setAttribute('aria-controls', 'example-grid-more');
+}
 
 
 // ── Document-level Events ──
@@ -481,3 +496,4 @@ document.addEventListener('selectionchange', () => {
 
 updateModeVisuals();
 render();
+input.focus();
