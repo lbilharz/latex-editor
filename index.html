@@ -52,6 +52,16 @@
         </section>
 
         <output id="math-announce" class="sr-only" aria-live="polite"></output>
+
+        <!-- Exercise mode: prompt + check -->
+        <div class="exercise-bar" id="exercise-bar" hidden>
+            <div class="exercise-prompt" id="exercise-prompt"></div>
+            <div class="exercise-actions">
+                <button type="button" class="check-btn" id="check-btn">Check answer</button>
+                <button type="button" class="exit-exercise-btn" id="exit-exercise-btn" aria-label="Close exercise">&times;</button>
+            </div>
+            <div class="exercise-result" id="exercise-result" role="status" aria-live="polite"></div>
+        </div>
     </div>
 
     <!-- Examples — promoted, with readable labels -->
@@ -79,6 +89,19 @@
             <button type="button" data-latex="(a+b)/(c-d)" aria-label="Load example: Grouped fraction, a plus b over c minus d">Grouped fraction</button>
         </div>
         <button type="button" class="show-more-btn" id="show-more-examples">Show all 17 examples</button>
+    </section>
+
+    <!-- Exercises — mock MathCore validation -->
+    <section class="exercises" aria-label="Practice exercises">
+        <h2 id="exercises-heading">Practice</h2>
+        <div class="exercise-grid" id="exercise-grid" role="group" aria-labelledby="exercises-heading">
+            <button type="button" data-prompt="What is 2 + 3?" data-answer="5">2 + 3 = ?</button>
+            <button type="button" data-prompt="Simplify the fraction 2/4" data-answer="\frac{1}{2}">Simplify 2/4</button>
+            <button type="button" data-prompt="What is 3&sup2;?" data-answer="9">3&sup2; = ?</button>
+            <button type="button" data-prompt="Solve for x: x + 4 = 7" data-answer="x = 3">x + 4 = 7</button>
+            <button type="button" data-prompt="What is &radic;16?" data-answer="4">&radic;16 = ?</button>
+            <button type="button" data-prompt="Complete: (a+b)&sup2; = ?" data-answer="a^2 + 2ab + b^2">(a+b)&sup2; = ?</button>
+        </div>
     </section>
 
     <!-- How to use -->

@@ -6,6 +6,7 @@ import { Parser } from './parser.js';
 import { toMathML } from './renderer.js';
 import { updateCursor, clickToSourcePos, getNavigableStops } from './cursor.js';
 import { collectErrors } from './errors.js';
+import { validateAnswer } from './validate.js';
 
 
 // ── DOM Elements ──
@@ -20,6 +21,11 @@ const upperSection = document.querySelector('.editor-upper');
 const lowerSection = document.querySelector('.editor-lower');
 const suggestions = document.getElementById('suggestions');
 const errorStrip  = document.getElementById('error-strip');
+const exerciseBar = document.getElementById('exercise-bar');
+const exercisePrompt = document.getElementById('exercise-prompt');
+const exerciseResult = document.getElementById('exercise-result');
+const checkBtn    = document.getElementById('check-btn');
+const exitExBtn   = document.getElementById('exit-exercise-btn');
 
 
 // ── State ──
@@ -29,6 +35,7 @@ let activeMode = 'latex';
 let mathCursorPos = 0;
 let currentAST = null;
 let navigableStops = [];
+let currentExercise = null; // { prompt, answer }
 
 
 // ── Suggestions ──
@@ -542,6 +549,107 @@ if (showMoreBtn && moreExamples) {
     showMoreBtn.setAttribute('aria-expanded', 'false');
     showMoreBtn.setAttribute('aria-controls', 'example-grid-more');
 }
+
+
+// ── Exercise Mode ──
+
+function enterExercise(prompt, answer) {
+    currentExercise = { prompt, answer };
+    exerciseBar.hidden = false;
+    exercisePrompt.textContent = prompt;
+    exerciseResult.innerHTML = '';
+    exerciseResult.className = 'exercise-result';
+    clearValidationMarks();
+
+    // Clear input for student to type
+    input.value = '';
+    lastValue = '';
+    render();
+    input.focus();
+}
+
+function exitExercise() {
+    currentExercise = null;
+    exerciseBar.hidden = true;
+    exerciseResult.innerHTML = '';
+    exerciseResult.className = 'exercise-result';
+    clearValidationMarks();
+}
+
+function checkAnswer() {
+    if (!currentExercise) return;
+    const studentSrc = input.value.trim();
+    if (!studentSrc) {
+        exerciseResult.textContent = 'Type your answer first.';
+        exerciseResult.className = 'exercise-result result-hint';
+        return;
+    }
+
+    const result = validateAnswer(studentSrc, currentExercise.answer);
+    applyValidationMarks(result.marks);
+
+    if (result.correct) {
+        exerciseResult.textContent = 'Correct!';
+        exerciseResult.className = 'exercise-result result-correct';
+        announce.textContent = 'Correct answer!';
+    } else {
+        exerciseResult.textContent = 'Not quite — check the highlighted parts.';
+        exerciseResult.className = 'exercise-result result-incorrect';
+        announce.textContent = 'Incorrect. Check the highlighted parts.';
+    }
+}
+
+function applyValidationMarks(marks) {
+    clearValidationMarks();
+    const mathTag = mathDisplay.querySelector('math');
+    if (!mathTag) return;
+
+    const elements = mathTag.querySelectorAll('[data-s][data-e]');
+    for (const el of elements) {
+        const s = +el.dataset.s;
+        const e = +el.dataset.e;
+        // Skip structural wrappers (mrow etc) — only mark leaf elements
+        if (el.querySelector('[data-s]')) continue;
+
+        for (const m of marks) {
+            // Check overlap
+            if (s >= m.start && e <= m.end || m.start >= s && m.start < e) {
+                if (m.status === 'correct') {
+                    el.classList.add('mark-correct');
+                } else {
+                    el.classList.add('mark-incorrect');
+                }
+                break;
+            }
+        }
+    }
+}
+
+function clearValidationMarks() {
+    mathDisplay.querySelectorAll('.mark-correct, .mark-incorrect').forEach(el => {
+        el.classList.remove('mark-correct', 'mark-incorrect');
+    });
+}
+
+// Exercise buttons
+document.querySelectorAll('.exercise-grid button[data-answer]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        enterExercise(btn.dataset.prompt, btn.dataset.answer);
+    });
+});
+
+// Check / exit buttons
+if (checkBtn) checkBtn.addEventListener('click', checkAnswer);
+if (exitExBtn) exitExBtn.addEventListener('click', exitExercise);
+
+// Clear marks when user edits after checking
+input.addEventListener('input', () => {
+    if (currentExercise && exerciseResult.textContent) {
+        clearValidationMarks();
+        exerciseResult.innerHTML = '';
+        exerciseResult.className = 'exercise-result';
+    }
+});
 
 
 // ── Document-level Events ──
