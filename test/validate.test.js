@@ -1,12 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { validateAnswer, extractLeaves } from '../validate.js';
+import { validateAnswer, extractLeaves, evaluate } from '../validate.js';
 import { tokenize } from '../tokenizer.js';
 import { Parser } from '../parser.js';
 
-function leaves(src) {
+function parse(src) {
     const tokens = tokenize(src);
-    const ast = new Parser(tokens, src.length).parse();
-    return extractLeaves(ast).filter(l => l.value !== '/').map(l => l.value);
+    return new Parser(tokens, src.length).parse();
+}
+
+function leaves(src) {
+    return extractLeaves(parse(src)).filter(l => l.value !== '/').map(l => l.value);
 }
 
 describe('extractLeaves', () => {
@@ -31,17 +34,70 @@ describe('extractLeaves', () => {
     });
 });
 
+describe('evaluate', () => {
+    it('evaluates a number', () => {
+        expect(evaluate(parse('42'))).toBe(42);
+    });
+
+    it('evaluates addition', () => {
+        expect(evaluate(parse('2 + 3'))).toBe(5);
+    });
+
+    it('evaluates subtraction', () => {
+        expect(evaluate(parse('7 - 4'))).toBe(3);
+    });
+
+    it('evaluates chained arithmetic', () => {
+        expect(evaluate(parse('1 + 2 + 3'))).toBe(6);
+    });
+
+    it('evaluates a fraction', () => {
+        expect(evaluate(parse('\\frac{6}{3}'))).toBe(2);
+    });
+
+    it('evaluates inline fraction', () => {
+        expect(evaluate(parse('6/3'))).toBe(2);
+    });
+
+    it('evaluates a power', () => {
+        expect(evaluate(parse('3^2'))).toBe(9);
+    });
+
+    it('evaluates a square root', () => {
+        expect(evaluate(parse('\\sqrt{16}'))).toBe(4);
+    });
+
+    it('evaluates a cube root', () => {
+        const val = evaluate(parse('\\sqrt[3]{8}'));
+        expect(val).toBeCloseTo(2, 9);
+    });
+
+    it('returns null for variables', () => {
+        expect(evaluate(parse('x'))).toBeNull();
+    });
+
+    it('returns null for mixed variable expressions', () => {
+        expect(evaluate(parse('x + 1'))).toBeNull();
+    });
+
+    it('evaluates parenthesized expressions', () => {
+        expect(evaluate(parse('(2 + 3)'))).toBe(5);
+    });
+
+    it('evaluates negative exponents', () => {
+        expect(evaluate(parse('2^{-1}'))).toBe(0.5);
+    });
+});
+
 describe('validateAnswer', () => {
     it('marks correct when answers match exactly', () => {
         const result = validateAnswer('5', '5');
         expect(result.correct).toBe(true);
-        expect(result.marks.every(m => m.status === 'correct')).toBe(true);
     });
 
     it('marks incorrect when answers differ', () => {
         const result = validateAnswer('4', '5');
         expect(result.correct).toBe(false);
-        expect(result.marks[0].status).toBe('incorrect');
     });
 
     it('validates multi-token expressions', () => {
@@ -49,20 +105,43 @@ describe('validateAnswer', () => {
         expect(result.correct).toBe(true);
     });
 
-    it('highlights the wrong part in a partially correct answer', () => {
-        const result = validateAnswer('2 + 4', '2 + 3');
+    it('accepts equivalent arithmetic: 7-4 == 3', () => {
+        const result = validateAnswer('7 - 4', '3');
+        expect(result.correct).toBe(true);
+    });
+
+    it('accepts equivalent arithmetic: 2+3 == 5', () => {
+        const result = validateAnswer('2 + 3', '5');
+        expect(result.correct).toBe(true);
+    });
+
+    it('accepts equivalent fractions: 2/4 == 1/2', () => {
+        const result = validateAnswer('\\frac{2}{4}', '\\frac{1}{2}');
+        expect(result.correct).toBe(true);
+    });
+
+    it('validates equations: x = 7-4 vs x = 3', () => {
+        const result = validateAnswer('x = 7 - 4', 'x = 3');
+        expect(result.correct).toBe(true);
+    });
+
+    it('rejects wrong equation side: x = 4 vs x = 3', () => {
+        const result = validateAnswer('x = 4', 'x = 3');
         expect(result.correct).toBe(false);
-        // '2' correct, '+' correct, '4' incorrect
-        expect(result.marks[0].status).toBe('correct');  // 2
-        expect(result.marks[1].status).toBe('correct');  // +
-        expect(result.marks[2].status).toBe('incorrect'); // 4 vs 3
+    });
+
+    it('highlights the wrong part in a partially correct answer', () => {
+        // leaf-by-leaf fallback: variable expressions can't be evaluated
+        const result = validateAnswer('x + 4', 'x + 3');
+        expect(result.correct).toBe(false);
+        const statuses = result.marks.map(m => m.status);
+        expect(statuses).toContain('correct');     // x, +
+        expect(statuses).toContain('incorrect');   // 4 vs 3
     });
 
     it('marks extra tokens', () => {
         const result = validateAnswer('2 + 3 + 1', '2 + 3');
         expect(result.correct).toBe(false);
-        const extras = result.marks.filter(m => m.status === 'extra');
-        expect(extras.length).toBeGreaterThan(0);
     });
 
     it('detects missing tokens', () => {
@@ -73,13 +152,6 @@ describe('validateAnswer', () => {
     it('validates x = 3 against x = 3', () => {
         const result = validateAnswer('x = 3', 'x = 3');
         expect(result.correct).toBe(true);
-    });
-
-    it('rejects x = 4 against x = 3', () => {
-        const result = validateAnswer('x = 4', 'x = 3');
-        expect(result.correct).toBe(false);
-        // x correct, = correct, 4 incorrect
-        expect(result.marks[2].status).toBe('incorrect');
     });
 
     it('validates fractions', () => {
@@ -94,6 +166,16 @@ describe('validateAnswer', () => {
 
     it('validates compound expression a^2 + 2ab + b^2', () => {
         const result = validateAnswer('a^2 + 2ab + b^2', 'a^2 + 2ab + b^2');
+        expect(result.correct).toBe(true);
+    });
+
+    it('accepts 3^2 == 9', () => {
+        const result = validateAnswer('3^2', '9');
+        expect(result.correct).toBe(true);
+    });
+
+    it('accepts sqrt(16) == 4', () => {
+        const result = validateAnswer('\\sqrt{16}', '4');
         expect(result.correct).toBe(true);
     });
 
