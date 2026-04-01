@@ -3,10 +3,11 @@
 import { SYMBOLS, FUNCTIONS, LARGE_OPS } from './data.js';
 import { tokenize } from './tokenizer.js';
 import { Parser } from './parser.js';
-import { toMathML } from './renderer.js';
+import { toMathML, setLocale } from './renderer.js';
 import { updateCursor, clickToSourcePos, getNavigableStops, clickToNode, findSiblingNode, findParentNode, findChildNode, highlightNode, clearNodeSelection, findNodeAtPos } from './cursor.js';
 import { collectErrors } from './errors.js';
 import { validateAnswer } from './validate.js';
+import { i18next, t, applyTranslations, createLanguageSwitcher } from './i18n.js';
 
 
 // ── DOM Elements ──
@@ -515,6 +516,9 @@ function setMode(newMode) {
 
 // ── Visual Sync ──
 
+const modeName = document.getElementById('mode-name');
+const modeHints = document.getElementById('mode-hints');
+
 function syncVisual() {
     if (activeMode === 'latex') {
         const selStart = input.selectionStart;
@@ -525,16 +529,35 @@ function syncVisual() {
         } else {
             updateSelectionHighlight();
         }
+        modeName.textContent = t('visualMathml');
+        modeName.style.color = '';
+        modeHints.style.display = 'none';
+        mathDisplay.classList.remove('mode-navigate', 'mode-edit');
     } else {
         clearSelectionOverlays();
-        // In MathML mode: use structural highlight instead of blinking cursor
         if (selectedNode) {
+            // Navigation mode: blue box around selected node
             cursorEl.style.display = 'none';
             highlightNode(selectedNode, mathDisplay);
+            modeName.textContent = t('navigate');
+            modeName.style.color = '#4361ee';
+            modeHints.style.display = '';
+            modeHints.querySelector('.cheat-nav').style.display = 'inline';
+            modeHints.querySelector('.cheat-edit').style.display = 'none';
+            mathDisplay.classList.add('mode-navigate');
+            mathDisplay.classList.remove('mode-edit');
         } else {
+            // Editing mode: green blinking cursor for insertion
             clearNodeSelection(mathDisplay);
             updateCursor(mathCursorPos, mathDisplay, cursorEl);
             cursorEl.style.display = 'block';
+            modeName.textContent = t('edit');
+            modeName.style.color = '#2ea043';
+            modeHints.style.display = '';
+            modeHints.querySelector('.cheat-nav').style.display = 'none';
+            modeHints.querySelector('.cheat-edit').style.display = 'inline';
+            mathDisplay.classList.add('mode-edit');
+            mathDisplay.classList.remove('mode-navigate');
         }
     }
 }
@@ -591,18 +614,18 @@ mathDisplay.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') {
         e.preventDefault();
         if (selectedNode) {
+            // Navigate mode: move to previous sibling, bubble up if none
             const sib = findSiblingNode(selectedNode, 'left', mathDisplay);
             if (sib) { selectedNode = sib; mathCursorPos = sib.start; }
             else {
-                // No sibling left — go up to parent
                 const parent = findParentNode(selectedNode, mathDisplay);
                 if (parent) { selectedNode = parent; mathCursorPos = parent.start; }
             }
         } else {
+            // Edit mode: move cursor between stops
             const idx = navigableStops.indexOf(mathCursorPos);
             if (idx > 0) mathCursorPos = navigableStops[idx - 1];
             else if (idx === -1) mathCursorPos = snapToNearestStop(mathCursorPos);
-            selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
         }
         syncVisual();
         return;
@@ -611,18 +634,18 @@ mathDisplay.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') {
         e.preventDefault();
         if (selectedNode) {
+            // Navigate mode: move to next sibling, bubble up if none
             const sib = findSiblingNode(selectedNode, 'right', mathDisplay);
             if (sib) { selectedNode = sib; mathCursorPos = sib.start; }
             else {
-                // No sibling right — go up to parent
                 const parent = findParentNode(selectedNode, mathDisplay);
                 if (parent) { selectedNode = parent; mathCursorPos = parent.start; }
             }
         } else {
+            // Edit mode: move cursor between stops
             const idx = navigableStops.indexOf(mathCursorPos);
             if (idx >= 0 && idx < navigableStops.length - 1) mathCursorPos = navigableStops[idx + 1];
             else if (idx === -1) mathCursorPos = snapToNearestStop(mathCursorPos);
-            selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
         }
         syncVisual();
         return;
@@ -631,8 +654,12 @@ mathDisplay.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') {
         e.preventDefault();
         if (selectedNode) {
+            // Navigate mode: go to parent
             const parent = findParentNode(selectedNode, mathDisplay);
             if (parent) { selectedNode = parent; mathCursorPos = parent.start; }
+        } else {
+            // Edit → Navigate: select node at cursor
+            selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
         }
         syncVisual();
         return;
@@ -642,7 +669,14 @@ mathDisplay.addEventListener('keydown', (e) => {
         e.preventDefault();
         if (selectedNode) {
             const child = findChildNode(selectedNode, mathDisplay);
-            if (child) { selectedNode = child; mathCursorPos = child.start; }
+            if (child) {
+                selectedNode = child; mathCursorPos = child.start;
+            } else {
+                // Leaf node, no children → enter Edit mode at start
+                mathCursorPos = selectedNode.start;
+                selectedNode = null;
+                mathCursorPos = snapToNearestStop(mathCursorPos);
+            }
         }
         syncVisual();
         return;
@@ -680,7 +714,7 @@ mathDisplay.addEventListener('keydown', (e) => {
         lastValue = '';
         render();
         mathCursorPos = snapToNearestStop(mathCursorPos);
-        selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
+        // Stay in cursor mode after delete
         syncVisual();
         return;
     }
@@ -693,10 +727,11 @@ mathDisplay.addEventListener('keydown', (e) => {
 
     if (e.key === 'Enter') {
         e.preventDefault();
-        // Deselect — position insert point after selection
         if (selectedNode) {
+            // Navigate → Edit: place cursor after selected node
             mathCursorPos = selectedNode.end;
             selectedNode = null;
+            mathCursorPos = snapToNearestStop(mathCursorPos);
         }
         syncVisual();
         return;
@@ -732,11 +767,11 @@ mathDisplay.addEventListener('keydown', (e) => {
             mathCursorPos = insertPos + 1;
         }
 
-        selectedNode = null;
+        selectedNode = null; // Stay in cursor mode after typing
         lastValue = '';
         render();
         mathCursorPos = snapToNearestStop(mathCursorPos);
-        selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
+        // Don't re-select — keep blinking cursor so user can keep typing
         syncVisual();
         return;
     }
@@ -767,28 +802,30 @@ mathDisplay.addEventListener('mousedown', (e) => {
         selectedNode = node;
         mathCursorPos = node.start;
     } else {
-        // Click in empty area — fall back to position-based
+        // Click in empty area — place cursor, don't select a node
         const pos = clickToSourcePos(e, mathDisplay);
         if (pos !== null) {
             mathCursorPos = snapToNearestStop(Math.max(0, Math.min(pos, input.value.length)));
         } else {
             mathCursorPos = input.value.length;
         }
-        selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
+        selectedNode = null;
     }
 
     syncVisual();
 });
 
-// Double-click: switch to LaTeX mode with cursor at clicked position
+// Double-click: enter Edit mode with cursor at clicked position
 mathDisplay.addEventListener('dblclick', (e) => {
     e.preventDefault();
+    if (activeMode !== 'mathml') setMode('mathml');
     const pos = clickToSourcePos(e, mathDisplay);
     if (pos !== null) {
         mathCursorPos = snapToNearestStop(Math.max(0, Math.min(pos, input.value.length)));
+    } else if (selectedNode) {
+        mathCursorPos = selectedNode.end;
     }
     selectedNode = null;
-    setMode('latex');
 });
 
 
@@ -997,6 +1034,27 @@ document.addEventListener('selectionchange', () => {
 
 
 // ── Initialize ──
+
+// i18n: apply translations and insert language switcher
+setLocale(i18next.language);
+applyTranslations();
+const langSwitcher = createLanguageSwitcher();
+document.getElementById('lang-switcher-container').appendChild(langSwitcher);
+// Re-render on language change to update thousand separators and translations
+i18next.on('languageChanged', (lng) => {
+    setLocale(lng);
+    applyTranslations();
+    lastValue = ''; // force re-render
+    render();
+});
+
+// Exercise prompts use i18n keys — translate them on click
+document.querySelectorAll('.exercise-grid button[data-prompt]').forEach(btn => {
+    const key = btn.getAttribute('data-prompt');
+    btn.addEventListener('click', () => {
+        exercisePrompt.textContent = t(key);
+    }, true); // capture phase: run before the main handler
+});
 
 updateModeVisuals();
 render();

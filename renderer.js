@@ -1,5 +1,31 @@
 // renderer.js — AST to MathML conversion
 
+let currentLocale = 'en';
+
+/** Set the locale used for number formatting (thousand separators) */
+export function setLocale(lang) {
+    currentLocale = lang || 'en';
+}
+
+/** Format a number string with locale-appropriate thousand separators */
+function formatNumber(raw) {
+    // Only format integers or decimals with 5+ digits in integer part
+    const match = raw.match(/^(\d+)(\.(\d+))?$/);
+    if (!match || match[1].length < 5) return raw;
+
+    const intPart = match[1];
+    const decPart = match[3];
+
+    // Use Intl.NumberFormat to get the locale grouping
+    try {
+        const num = BigInt(intPart);
+        const formatted = new Intl.NumberFormat(currentLocale, { useGrouping: true }).format(num);
+        return decPart !== undefined ? formatted + raw[match[1].length] + decPart : formatted;
+    } catch {
+        return raw;
+    }
+}
+
 export function toMathML(node) {
     const a = ` data-s="${node.start}" data-e="${node.end}"`;
 
@@ -10,7 +36,7 @@ export function toMathML(node) {
             return `<mrow${a}>${inner}</mrow>`;
         }
         case 'number':
-            return `<mn${a}>${esc(node.value)}</mn>`;
+            return `<mn${a}>${esc(formatNumber(node.value))}</mn>`;
         case 'variable':
             return `<mi${a}>${esc(node.value)}</mi>`;
         case 'operator':

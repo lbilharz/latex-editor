@@ -16,7 +16,24 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.hero-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
 h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+
+.lang-switcher {
+    padding: 0.25rem 0.4rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 0.8rem;
+    color: #444;
+    cursor: pointer;
+}
 
 .subtitle {
     color: #555;
@@ -125,6 +142,31 @@ h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
     background: #eef0ff;
     border-color: #4361ee;
     color: #4361ee;
+}
+
+/* ── Inline Mode Hints ── */
+.mode-hints {
+    font-size: 0.68rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 0.5rem;
+    color: #999;
+}
+
+.mode-hints kbd {
+    padding: 0.05em 0.25em;
+    border: 1px solid #d0d0d0;
+    border-radius: 3px;
+    background: #f0f0f0;
+    font-family: inherit;
+    font-size: 0.9em;
+    margin: 0 0.05em;
+}
+
+.mode-hints .cheat-nav,
+.mode-hints .cheat-edit {
+    display: none;
 }
 
 /* ── Lower Section (LaTeX + Suggestions) ── */
@@ -303,12 +345,26 @@ h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
     background: rgba(67, 97, 238, 0.07);
 }
 
-/* ── Node selection (structural selection in MathML mode) ── */
+/* ── Navigate / Edit mode indicators ── */
+.math-display.mode-navigate {
+    background: rgba(67, 97, 238, 0.03);
+}
+
+.math-display.mode-edit {
+    background: rgba(46, 160, 67, 0.03);
+}
+
+/* ── Node selection (Navigate mode) ── */
 .math-display .node-selected {
     outline: 2px solid rgba(67, 97, 238, 0.7);
     outline-offset: 2px;
     background: rgba(67, 97, 238, 0.08);
     border-radius: 3px;
+}
+
+/* ── Edit mode: green cursor ── */
+.math-display.mode-edit .cursor {
+    background: #2ea043;
 }
 
 /* ── Selection overlay ── */
