@@ -553,19 +553,20 @@ if (showMoreBtn && moreExamples) {
 
 // ── Exercise Mode ──
 
-function enterExercise(prompt, answer) {
-    currentExercise = { prompt, answer };
+function enterExercise(prompt, answer, prefill) {
+    currentExercise = { prompt, answer, prefill: prefill || '' };
     exerciseBar.hidden = false;
     exercisePrompt.textContent = prompt;
     exerciseResult.innerHTML = '';
     exerciseResult.className = 'exercise-result';
     clearValidationMarks();
 
-    // Clear input for student to type
-    input.value = '';
+    // Prefill input and place cursor at end
+    input.value = prefill || '';
     lastValue = '';
     render();
     input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
 }
 
 function exitExercise() {
@@ -579,7 +580,7 @@ function exitExercise() {
 function checkAnswer() {
     if (!currentExercise) return;
     const studentSrc = input.value.trim();
-    if (!studentSrc) {
+    if (!studentSrc || studentSrc === currentExercise.prefill.trim()) {
         exerciseResult.textContent = 'Type your answer first.';
         exerciseResult.className = 'exercise-result result-hint';
         return;
@@ -634,7 +635,7 @@ function clearValidationMarks() {
 // Exercise buttons
 document.querySelectorAll('.exercise-grid button[data-answer]').forEach(btn => {
     btn.addEventListener('click', () => {
-        enterExercise(btn.dataset.prompt, btn.dataset.answer);
+        enterExercise(btn.dataset.prompt, btn.dataset.answer, btn.dataset.prefill);
     });
 });
 
@@ -642,12 +643,20 @@ document.querySelectorAll('.exercise-grid button[data-answer]').forEach(btn => {
 if (checkBtn) checkBtn.addEventListener('click', checkAnswer);
 if (exitExBtn) exitExBtn.addEventListener('click', exitExercise);
 
-// Clear marks when user edits after checking
+// Auto-check on typing (debounced)
+let checkTimeout = null;
 input.addEventListener('input', () => {
-    if (currentExercise && exerciseResult.textContent) {
-        clearValidationMarks();
-        exerciseResult.innerHTML = '';
-        exerciseResult.className = 'exercise-result';
+    if (!currentExercise) return;
+    clearValidationMarks();
+    exerciseResult.innerHTML = '';
+    exerciseResult.className = 'exercise-result';
+
+    // Debounce: wait 600ms after last keystroke before checking
+    // Don't auto-check if input is still just the prefill
+    clearTimeout(checkTimeout);
+    const val = input.value.trim();
+    if (val && val !== currentExercise.prefill.trim()) {
+        checkTimeout = setTimeout(checkAnswer, 600);
     }
 });
 
