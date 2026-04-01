@@ -105,4 +105,17 @@ describe('getNavigableStops', () => {
       expect(s).toContain(3); // after 2
     });
   });
+
+  describe('nth root', () => {
+    it('has a stop inside empty index of \\sqrt[]{}', () => {
+      const s = stops('\\sqrt[]{x}');
+      expect(s).toContain(6); // inside [] — where you type the index
+    });
+
+    it('has stops inside filled index of \\sqrt[3]{x}', () => {
+      const s = stops('\\sqrt[3]{x}');
+      expect(s).toContain(6); // before 3
+      expect(s).toContain(7); // after 3
+    });
+  });
 });

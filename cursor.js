@@ -168,7 +168,13 @@ export function getNavigableStops(ast, srcLen) {
                 walk(node.den || node.bot);
                 break;
             case 'sqrt':
-                if (node.index) walk(node.index);
+                if (node.index) {
+                    // Add stop inside empty index (e.g. \sqrt[]{})
+                    if (!node.index.children || node.index.children.length === 0) {
+                        stops.add(node.index.start);
+                    }
+                    walk(node.index);
+                }
                 walk(node.body);
                 break;
             case 'sup': case 'sub':
