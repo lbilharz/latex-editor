@@ -180,6 +180,59 @@ h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
     font-size: 0.9em;
 }
 
+/* ── Error States ── */
+.source-input.has-errors {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.12);
+}
+
+.source-input.has-errors:focus {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.18);
+}
+
+.error-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.35rem 1rem;
+    margin-top: 0.1rem;
+}
+
+.error-strip[hidden] {
+    display: none;
+}
+
+.error-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: #c0392b;
+    cursor: pointer;
+    padding: 0.15rem 0.5rem 0.15rem 0.35rem;
+    border-radius: 4px;
+    transition: background 0.1s;
+}
+
+.error-item:hover {
+    background: rgba(231, 76, 60, 0.08);
+}
+
+.error-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e74c3c;
+    flex-shrink: 0;
+}
+
+.error-pos {
+    font-size: 0.7rem;
+    color: #999;
+    margin-left: 0.15rem;
+}
+
 /* ── Suggestions Row ── */
 .suggestions-row {
     display: flex;

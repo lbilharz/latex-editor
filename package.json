@@ -12,6 +12,7 @@
     "export.js",
     "data.js",
     "cursor.js",
+    "errors.js",
     "index.js"
   ],
   "scripts": {

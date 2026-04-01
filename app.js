@@ -5,6 +5,7 @@ import { tokenize } from './tokenizer.js';
 import { Parser } from './parser.js';
 import { toMathML } from './renderer.js';
 import { updateCursor, clickToSourcePos, getNavigableStops } from './cursor.js';
+import { collectErrors } from './errors.js';
 
 
 // ── DOM Elements ──
@@ -18,6 +19,7 @@ const announce    = document.getElementById('math-announce');
 const upperSection = document.querySelector('.editor-upper');
 const lowerSection = document.querySelector('.editor-lower');
 const suggestions = document.getElementById('suggestions');
+const errorStrip  = document.getElementById('error-strip');
 
 
 // ── State ──
@@ -106,6 +108,7 @@ function render() {
         debugOut.textContent = '(empty)';
         announce.textContent = 'Empty formula';
         navigableStops = [0];
+        displayErrors([]);
         return;
     }
 
@@ -123,6 +126,10 @@ function render() {
 
     currentAST = ast;
     navigableStops = getNavigableStops(ast, src.length);
+
+    // Collect and display errors
+    const errors = collectErrors(ast, src);
+    displayErrors(errors);
 
     const mathml = `<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">${toMathML(ast)}</math>`;
 
@@ -147,6 +154,61 @@ function render() {
         'Tokens: ' + tokens.length + '\n' +
         'Stops: ' + JSON.stringify(navigableStops) + '\n' +
         'AST:\n' + JSON.stringify(ast, null, 2).slice(0, 2000);
+}
+
+
+// ── Error Display ──
+
+function displayErrors(errors) {
+    if (!errorStrip) return;
+
+    if (errors.length === 0) {
+        errorStrip.innerHTML = '';
+        errorStrip.hidden = true;
+        input.classList.remove('has-errors');
+        return;
+    }
+
+    input.classList.add('has-errors');
+    errorStrip.hidden = false;
+
+    // Deduplicate by message (e.g. "Missing argument" can appear twice for \frac{}{})
+    const unique = [];
+    const seen = new Set();
+    for (const e of errors) {
+        const key = e.message + ':' + e.start;
+        if (!seen.has(key)) { seen.add(key); unique.push(e); }
+    }
+
+    errorStrip.innerHTML = unique.map(e => {
+        const posLabel = e.start === e.end ? `pos ${e.start}` : `pos ${e.start}–${e.end}`;
+        return `<span class="error-item" data-start="${e.start}" data-end="${e.end}">`
+             + `<span class="error-dot"></span>${esc(e.message)}`
+             + `<span class="error-pos">${posLabel}</span></span>`;
+    }).join('');
+
+    // Click an error to jump cursor to that position
+    errorStrip.querySelectorAll('.error-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const pos = +item.dataset.start;
+            if (activeMode === 'latex') {
+                input.focus();
+                input.setSelectionRange(pos, +item.dataset.end);
+            } else {
+                mathCursorPos = snapToNearestStop(pos);
+            }
+            syncVisual();
+        });
+    });
+
+    // Announce first error to screen reader
+    announce.textContent = `Error: ${unique[0].message}`;
+}
+
+function esc(s) {
+    const el = document.createElement('span');
+    el.textContent = s;
+    return el.innerHTML;
 }
 
 
