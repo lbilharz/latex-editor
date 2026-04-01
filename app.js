@@ -634,8 +634,21 @@ mathDisplay.addEventListener('keydown', (e) => {
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         clearValidationMarks();
-        input.value = src.slice(0, mathCursorPos) + e.key + src.slice(mathCursorPos);
-        mathCursorPos++;
+
+        // Auto-expand structural characters to their braced form
+        const expansions = {
+            '^': '^{}',
+            '_': '_{}',
+        };
+        const expanded = expansions[e.key];
+        if (expanded) {
+            input.value = src.slice(0, mathCursorPos) + expanded + src.slice(mathCursorPos);
+            mathCursorPos += expanded.length - 1; // inside the braces
+        } else {
+            input.value = src.slice(0, mathCursorPos) + e.key + src.slice(mathCursorPos);
+            mathCursorPos++;
+        }
+
         lastValue = '';
         render();
         mathCursorPos = snapToNearestStop(mathCursorPos);
