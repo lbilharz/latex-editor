@@ -10,28 +10,35 @@ export function findBestElement(cursorPos, mathDisplay) {
         candidates.push({ el, s: +el.dataset.s, e: +el.dataset.e, depth: childrenWithPos.length });
     });
 
-    // First pass: cursor strictly inside an element → prefer smallest (leaf)
+    // Sort by smallest range first (leaf preference)
     candidates.sort((a, b) => {
         const rangeA = a.e - a.s, rangeB = b.e - b.s;
         if (rangeA !== rangeB) return rangeA - rangeB;
         return a.depth - b.depth;
     });
 
+    // Find the smallest element containing cursorPos
+    let best = null;
     for (const c of candidates) {
-        if (cursorPos > c.s && cursorPos < c.e) return c;
+        if (cursorPos >= c.s && cursorPos <= c.e) { best = c; break; }
+    }
+    if (!best) return null;
+
+    // At boundary: if a structural parent shares the SAME boundary,
+    // prefer the parent so cursor appears before/after the whole structure.
+    // Example: position 9 in "1/2 + 3/4" — mn(8-9) and mfrac(6-9) both end at 9,
+    // so prefer mfrac. But position 7 — only mn(6-7) ends at 7, mfrac doesn't,
+    // so keep mn.
+    if (cursorPos === best.e || cursorPos === best.s) {
+        for (const c of candidates) {
+            if (c.e - c.s <= best.e - best.s) continue; // must be larger
+            const shared = (cursorPos === best.e && cursorPos === c.e) ||
+                           (cursorPos === best.s && cursorPos === c.s);
+            if (shared) best = c; // keep going — largest ancestor with shared boundary wins
+        }
     }
 
-    // Second pass: cursor at boundary → prefer largest (container)
-    // so cursor appears before/after the whole structure, not inside a sub-element
-    candidates.sort((a, b) => {
-        const rangeA = a.e - a.s, rangeB = b.e - b.s;
-        return rangeB - rangeA;
-    });
-
-    for (const c of candidates) {
-        if (cursorPos >= c.s && cursorPos <= c.e) return c;
-    }
-    return null;
+    return best;
 }
 
 export function computeCursorX(cursorPos, mathDisplay) {
