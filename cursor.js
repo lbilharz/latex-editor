@@ -137,6 +137,11 @@ export function getNavigableStops(ast, srcLen) {
                 node.children.forEach(walk);
                 break;
             case 'group':
+                // Add a stop inside empty groups (e.g. ^{} or _{})
+                // so cursor can land between the braces
+                if (!node.body || !node.body.children || node.body.children.length === 0) {
+                    stops.add(node.start + 1); // position after '{'
+                }
                 walk(node.body);
                 break;
             case 'frac': case 'binom':
