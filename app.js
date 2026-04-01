@@ -264,7 +264,7 @@ function findNextEmptyGroup(ast, pos, forward) {
 
 function render() {
     const src = input.value;
-    if (src === lastValue && mathDisplay.querySelector('math')) {
+    if (src && src === lastValue && mathDisplay.querySelector('math')) {
         const cp = activeMode === 'latex' ? input.selectionStart : mathCursorPos;
         updateCursor(cp, mathDisplay, cursorEl);
         return;
