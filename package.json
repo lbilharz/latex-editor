@@ -2,7 +2,18 @@
   "name": "latex-editor",
   "version": "1.0.0",
   "description": "Accessible LaTeX formula editor for visually impaired students",
+  "main": "index.js",
+  "module": "index.js",
   "type": "module",
+  "files": [
+    "tokenizer.js",
+    "parser.js",
+    "renderer.js",
+    "export.js",
+    "data.js",
+    "cursor.js",
+    "index.js"
+  ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
