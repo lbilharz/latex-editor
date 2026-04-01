@@ -1,19 +1,16 @@
 # LaTeX Formula Editor
 
-An accessible math formula editor that bridges visually impaired and sighted users through a shared editing experience.
+**[Live Demo](https://latex-mathml-editor.vercel.app)**
 
-## The Idea
+An accessible math formula editor for visually impaired students — and everyone working alongside them.
 
-Visually impaired people use Braille displays and screen readers to interact with computers. For math, LaTeX is the linear text notation they already know — `\frac{1}{2}` is perfectly readable on a Braille display, navigable character-by-character, and unambiguous.
+## Why
 
-Sighted people expect to see math rendered visually — fractions stacked, square roots with radical signs, superscripts raised.
+Math on the web is visual. Fractions stack, exponents rise, roots get radical signs. Screen readers and Braille displays can't navigate that. The standard workaround — custom ARIA trees, invisible descriptions — bolts accessibility onto a visual model.
 
-This editor serves both at the same time:
+This editor takes the opposite approach: **LaTeX is the primary input.** It's linear text. Screen readers read it. Braille displays render it. Keyboard navigation works character by character. No special modes, no workarounds.
 
-- **LaTeX input** — a standard text field. Screen readers read it. Braille displays render it. Keyboard navigation just works.
-- **MathML output** — the browser renders the same formula as native visual math, in real time.
-
-Both views stay in sync. A visually impaired student types `\frac{a}{b}` and their sighted teacher sees a rendered fraction. A teacher provides an example formula and the student reads it back as LaTeX on their Braille display.
+For sighted users, the same formula renders as native MathML in real time — fractions, roots, and all. Both views stay in sync. A visually impaired student types `\frac{a}{b}` and their teacher sees a rendered fraction. A teacher provides an example formula and the student reads it back on their Braille display.
 
 ## Architecture
 
@@ -24,7 +21,7 @@ LaTeX string → Tokenizer → Parser (AST) → MathML renderer → Browser nati
 - **Zero dependencies** — vanilla JS, no React, no build step
 - **Native MathML** — the browser handles math layout, not JavaScript
 - **~900 lines** across 7 modules
-- **Dual-mode editing** — edit in LaTeX source or navigate the rendered MathML visually
+- **Dual-mode editing** — LaTeX source or MathML visual navigation
 
 ## Modules
 
@@ -32,29 +29,22 @@ LaTeX string → Tokenizer → Parser (AST) → MathML renderer → Browser nati
 |------|---------|
 | `tokenizer.js` | Lexer: LaTeX source → token stream |
 | `parser.js` | Recursive descent parser → AST |
-| `renderer.js` | AST → MathML string with source position attributes |
+| `renderer.js` | AST → MathML with source position attributes |
 | `cursor.js` | Cursor positioning, click-to-source mapping, navigable stops |
-| `data.js` | Symbol tables (Greek, operators, functions, etc.) |
-| `app.js` | Application logic, mode switching, toolbar, suggestions |
+| `data.js` | Symbol tables (Greek, operators, functions) |
+| `app.js` | Mode switching, toolbar, suggestions, event handling |
 | `styles.css` | Layout and visual states |
 
-## Running
+## Running locally
 
 ```bash
-cd latex-editor
 python3 -m http.server 8090
 # open http://localhost:8090
 ```
 
-## Features
+## Context
 
-- LaTeX tokenizer handling commands, braces, scripts, brackets, operators
-- Recursive descent parser supporting `\frac`, `\sqrt`, `\binom`, matrices, and more
-- Real-time MathML preview with `data-s`/`data-e` source position mapping
-- Dual-mode: switch between LaTeX editing and MathML visual navigation
-- Command autocomplete suggestions when typing `\`
-- Math toolbar for quick insertion of fractions, roots, powers, vectors
-- Cursor synchronization between LaTeX source positions and MathML elements
+This prototype is part of the bettermarks accessibility initiative ([BM-68839](https://bettermarks.atlassian.net/browse/BM-68839)), building an accessible alternative to the existing visual formula editor for visually impaired students.
 
 ## License
 
