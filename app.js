@@ -593,6 +593,11 @@ mathDisplay.addEventListener('keydown', (e) => {
         if (selectedNode) {
             const sib = findSiblingNode(selectedNode, 'left', mathDisplay);
             if (sib) { selectedNode = sib; mathCursorPos = sib.start; }
+            else {
+                // No sibling left — go up to parent
+                const parent = findParentNode(selectedNode, mathDisplay);
+                if (parent) { selectedNode = parent; mathCursorPos = parent.start; }
+            }
         } else {
             const idx = navigableStops.indexOf(mathCursorPos);
             if (idx > 0) mathCursorPos = navigableStops[idx - 1];
@@ -608,6 +613,11 @@ mathDisplay.addEventListener('keydown', (e) => {
         if (selectedNode) {
             const sib = findSiblingNode(selectedNode, 'right', mathDisplay);
             if (sib) { selectedNode = sib; mathCursorPos = sib.start; }
+            else {
+                // No sibling right — go up to parent
+                const parent = findParentNode(selectedNode, mathDisplay);
+                if (parent) { selectedNode = parent; mathCursorPos = parent.start; }
+            }
         } else {
             const idx = navigableStops.indexOf(mathCursorPos);
             if (idx >= 0 && idx < navigableStops.length - 1) mathCursorPos = navigableStops[idx + 1];
