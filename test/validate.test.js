@@ -90,9 +90,10 @@ describe('evaluate', () => {
 });
 
 describe('validateAnswer', () => {
-    it('marks correct when answers match exactly', () => {
+    it('correct answer produces no marks', () => {
         const result = validateAnswer('5', '5');
         expect(result.correct).toBe(true);
+        expect(result.marks).toEqual([]);
     });
 
     it('marks incorrect when answers differ', () => {
@@ -130,13 +131,12 @@ describe('validateAnswer', () => {
         expect(result.correct).toBe(false);
     });
 
-    it('highlights the wrong part in a partially correct answer', () => {
+    it('wrong leaf in expression gets one enclosing incorrect mark', () => {
         // leaf-by-leaf fallback: variable expressions can't be evaluated
         const result = validateAnswer('x + 4', 'x + 3');
         expect(result.correct).toBe(false);
-        const statuses = result.marks.map(m => m.status);
-        expect(statuses).toContain('correct');     // x, +
-        expect(statuses).toContain('incorrect');   // 4 vs 3
+        expect(result.marks.length).toBe(1);
+        expect(result.marks[0].status).toBe('incorrect');
     });
 
     it('marks extra tokens', () => {
@@ -169,6 +169,21 @@ describe('validateAnswer', () => {
         expect(result.correct).toBe(true);
     });
 
+    it('accepts reordered terms: a^2 + b^2 + 2ab == a^2 + 2ab + b^2', () => {
+        const result = validateAnswer('(a+b)^2 = a^{2} + b^{2} + 2ab', '(a+b)^2 = a^2 + 2ab + b^2');
+        expect(result.correct).toBe(true);
+    });
+
+    it('accepts reordered terms: 2ab + a^2 + b^2', () => {
+        const result = validateAnswer('(a+b)^2 = 2ab + a^{2} + b^{2}', '(a+b)^2 = a^2 + 2ab + b^2');
+        expect(result.correct).toBe(true);
+    });
+
+    it('rejects wrong terms even if reordered', () => {
+        const result = validateAnswer('(a+b)^2 = a^{2} + b^{2}', '(a+b)^2 = a^2 + 2ab + b^2');
+        expect(result.correct).toBe(false);
+    });
+
     it('accepts 3^2 == 9', () => {
         const result = validateAnswer('3^2', '9');
         expect(result.correct).toBe(true);
@@ -177,6 +192,19 @@ describe('validateAnswer', () => {
     it('accepts sqrt(16) == 4', () => {
         const result = validateAnswer('\\sqrt{16}', '4');
         expect(result.correct).toBe(true);
+    });
+
+    it('correct answer produces no marks at all', () => {
+        const result = validateAnswer('\\sqrt{16} = 4', '\\sqrt{16} = 4');
+        expect(result.correct).toBe(true);
+        expect(result.marks).toEqual([]);
+    });
+
+    it('wrong answer gets one enclosing mark on the answer segment only', () => {
+        const result = validateAnswer('\\sqrt{16} = 5', '\\sqrt{16} = 4');
+        expect(result.correct).toBe(false);
+        expect(result.marks.length).toBe(1);
+        expect(result.marks[0].status).toBe('incorrect');
     });
 
     it('provides a correct message', () => {

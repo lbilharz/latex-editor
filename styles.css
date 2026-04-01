@@ -579,18 +579,13 @@ h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
 }
 
 /* ── Validation marks on MathML ── */
-.mark-correct {
-    background: rgba(39, 174, 96, 0.15);
-    outline: 2px solid rgba(39, 174, 96, 0.5);
-    outline-offset: 1px;
-    border-radius: 2px;
-}
-
-.mark-incorrect {
-    background: rgba(231, 76, 60, 0.15);
-    outline: 2px solid rgba(231, 76, 60, 0.6);
-    outline-offset: 1px;
-    border-radius: 2px;
+.mark-incorrect-overlay {
+    position: absolute;
+    background: rgba(231, 76, 60, 0.10);
+    border: 2px solid rgba(231, 76, 60, 0.55);
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* ── Debug Panel ── */

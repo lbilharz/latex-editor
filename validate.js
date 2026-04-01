@@ -237,6 +237,46 @@ function approxEqual(a, b, eps = 1e-9) {
 }
 
 /**
+ * Split a row node into additive terms (at + and - operators).
+ * Returns array of { sign, nodes } or null if not a simple additive expression.
+ */
+function splitTerms(node) {
+    if (node.type !== 'row') return [node];
+
+    const terms = [];
+    let current = [];
+    let sign = '+';
+
+    for (const child of node.children) {
+        if (child.type === 'operator' && (child.value === '+' || child.value === '-' || child.value === '−')) {
+            if (current.length > 0) {
+                terms.push({ sign, nodes: current });
+            }
+            sign = (child.value === '+') ? '+' : '-';
+            current = [];
+        } else {
+            current.push(child);
+        }
+    }
+    if (current.length > 0) {
+        terms.push({ sign, nodes: current });
+    }
+
+    return terms.length > 0 ? terms : null;
+}
+
+/**
+ * Create a canonical string signature for a term (sign + leaf values).
+ * Used for unordered comparison of additive terms.
+ */
+function termSignature(term) {
+    const node = term.nodes.length === 1 ? term.nodes[0]
+        : { type: 'row', children: term.nodes, start: 0, end: 0 };
+    const leaves = extractLeaves(node).filter(l => l.value !== '/').map(l => l.value);
+    return term.sign + ':' + leaves.join(',');
+}
+
+/**
  * Compare student input against expected answer.
  * Uses evaluation where possible, falls back to leaf comparison.
  * Returns { correct, marks, message }
@@ -251,85 +291,89 @@ export function validateAnswer(studentSrc, expectedSrc) {
     const marks = [];
     let allCorrect = true;
 
-    // Compare segment by segment (sides of equation)
-    const maxSegs = Math.max(studentSegments.length, expectedSegments.length);
+    // Only validate the LAST segment (the student's answer).
+    // Earlier segments are the prompt/given — marking them is pointless.
+    // For bare expressions without '=', validate the whole thing.
+    const hasEquals = studentEquals.length > 0;
+    const lastStudentIdx = studentSegments.length - 1;
+    const lastExpectedIdx = expectedSegments.length - 1;
 
-    for (let i = 0; i < maxSegs; i++) {
-        const sSeg = studentSegments[i];
-        const eSeg = expectedSegments[i];
-
-        if (!sSeg) {
-            // Student has fewer segments — missing
-            allCorrect = false;
-            continue;
-        }
-
-        if (!eSeg) {
-            // Student has extra segments
-            allCorrect = false;
-            markSegment(sSeg, 'extra', marks);
-            continue;
-        }
-
-        // Try numeric evaluation first
-        const sVal = evaluate(sSeg.node);
-        const eVal = evaluate(eSeg.node);
-
-        if (sVal !== null && eVal !== null) {
-            // Both evaluate to numbers — compare values
-            if (approxEqual(sVal, eVal)) {
-                markSegment(sSeg, 'correct', marks);
-            } else {
-                markSegment(sSeg, 'incorrect', marks);
-                allCorrect = false;
-            }
-        } else {
-            // Fall back to leaf-by-leaf comparison
-            const sLeaves = extractLeaves(sSeg.node).filter(l => l.value !== '/');
-            const eLeaves = extractLeaves(eSeg.node).filter(l => l.value !== '/');
-
-            for (let j = 0; j < sLeaves.length; j++) {
-                const sl = sLeaves[j];
-                if (j < eLeaves.length) {
-                    if (sl.value === eLeaves[j].value) {
-                        marks.push({ start: sl.start, end: sl.end, status: 'correct' });
-                    } else {
-                        marks.push({ start: sl.start, end: sl.end, status: 'incorrect' });
-                        allCorrect = false;
-                    }
-                } else {
-                    marks.push({ start: sl.start, end: sl.end, status: 'extra' });
-                    allCorrect = false;
-                }
-            }
-
-            if (eLeaves.length > sLeaves.length) {
-                allCorrect = false;
-            }
-        }
+    if (lastStudentIdx < 0 || lastExpectedIdx < 0) {
+        // Empty input
+        return { correct: false, marks: [], message: 'Not quite — check the highlighted parts.' };
     }
 
-    // Mark '=' signs: correct if both adjacent segments are correct
-    for (let i = 0; i < studentEquals.length; i++) {
-        const eq = studentEquals[i];
-        // '=' between segment i and i+1
-        const leftOk = i < marks.length && marks.filter(m =>
-            m.end <= eq.start && m.status === 'correct').length > 0;
-        // Simpler: if allCorrect, all '=' are correct; otherwise mark based on surrounding
-        const status = allCorrect ? 'correct' : 'incorrect';
-        marks.push({ start: eq.start, end: eq.end, status });
+    if (hasEquals) {
+        // Equation mode: only validate the last (answer) segment
+        const sSeg = studentSegments[lastStudentIdx];
+        const eSeg = expectedSegments[lastExpectedIdx];
+        allCorrect = compareSegment(sSeg, eSeg, marks);
+    } else {
+        // No '=' — validate the entire expression
+        const sSeg = studentSegments[0];
+        const eSeg = expectedSegments[0];
+        allCorrect = compareSegment(sSeg, eSeg, marks);
     }
+
+    // '=' signs are part of the prompt structure — don't mark them.
 
     const message = allCorrect ? 'Correct!' : 'Not quite — check the highlighted parts.';
     return { correct: allCorrect, marks, message };
 }
 
 /**
- * Mark all leaves in a segment with the given status.
+ * Compare a student segment against an expected segment.
+ * Only marks incorrect answers — correct answers get no marks.
+ * When wrong, produces ONE mark spanning the entire answer segment.
  */
-function markSegment(seg, status, marks) {
-    const leaves = extractLeaves(seg.node).filter(l => l.value !== '/');
-    for (const l of leaves) {
-        marks.push({ start: l.start, end: l.end, status });
+function compareSegment(sSeg, eSeg, marks) {
+    if (!sSeg) return false;
+    if (!eSeg) {
+        marks.push({ start: sSeg.start, end: sSeg.end, status: 'incorrect' });
+        return false;
     }
+
+    // Try numeric evaluation first
+    const sVal = evaluate(sSeg.node);
+    const eVal = evaluate(eSeg.node);
+
+    if (sVal !== null && eVal !== null) {
+        if (approxEqual(sVal, eVal)) {
+            return true;
+        } else {
+            marks.push({ start: sSeg.start, end: sSeg.end, status: 'incorrect' });
+            return false;
+        }
+    }
+
+    // Try unordered term comparison (addition is commutative)
+    const sTerms = splitTerms(sSeg.node);
+    const eTerms = splitTerms(eSeg.node);
+
+    if (sTerms && eTerms && sTerms.length === eTerms.length) {
+        // Normalize each term to a leaf string and compare as sets
+        const sNorm = sTerms.map(termSignature).sort();
+        const eNorm = eTerms.map(termSignature).sort();
+        if (sNorm.every((t, i) => t === eNorm[i])) {
+            return true;
+        }
+    }
+
+    // Fall back to strict ordered leaf-by-leaf comparison
+    const sLeaves = extractLeaves(sSeg.node).filter(l => l.value !== '/');
+    const eLeaves = extractLeaves(eSeg.node).filter(l => l.value !== '/');
+
+    if (sLeaves.length !== eLeaves.length) {
+        marks.push({ start: sSeg.start, end: sSeg.end, status: 'incorrect' });
+        return false;
+    }
+
+    for (let j = 0; j < sLeaves.length; j++) {
+        if (sLeaves[j].value !== eLeaves[j].value) {
+            marks.push({ start: sSeg.start, end: sSeg.end, status: 'incorrect' });
+            return false;
+        }
+    }
+
+    return true;
 }
