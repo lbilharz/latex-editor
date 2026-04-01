@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX Math Editor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>LaTeX Math Editor</h1>
+    <p class="subtitle">Standards-based prototype &mdash; MathML rendering, no external libraries</p>
+
+    <div class="editor" role="group" aria-label="Math formula editor">
+        <!-- Upper section: MathML display + toolbar -->
+        <section class="editor-upper mode-inactive">
+            <div id="math-display" class="math-display" tabindex="0" aria-hidden="true">
+                <span class="placeholder" id="placeholder">Type LaTeX below &mdash; e.g. \frac{a+b}{2}</span>
+                <span class="cursor" id="cursor"></span>
+            </div>
+            <div class="math-toolbar" id="math-toolbar">
+                <button type="button" data-insert="^{}" data-offset="2" title="Superscript">x&sup2;</button>
+                <button type="button" data-insert="_{}" data-offset="2" title="Subscript">x&#8345;</button>
+                <button type="button" data-insert="\frac{}{}" data-offset="6" title="Fraction">&frac12;</button>
+                <button type="button" data-insert="\sqrt{}" data-offset="6" title="Square root">&radic;</button>
+                <button type="button" data-insert="\sqrt[]{}" data-offset="6" title="Nth root">&#8731;</button>
+                <button type="button" data-insert="()" data-offset="1" title="Parentheses">(&thinsp;)</button>
+                <button type="button" data-insert="\vec{}" data-offset="5" title="Vector">&#x20d7;</button>
+            </div>
+        </section>
+
+        <hr class="editor-divider">
+
+        <!-- Lower section: LaTeX source + suggestions -->
+        <section class="editor-lower">
+            <div class="source-row">
+                <span class="source-label">LaTeX</span>
+                <input type="text"
+                       id="latex-src"
+                       class="source-input"
+                       autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       spellcheck="false"
+                       placeholder="\frac{1}{2} + \sqrt{x^2 + 1}"
+                       aria-label="LaTeX formula source"
+                       aria-describedby="math-announce">
+            </div>
+            <div class="suggestions-row" id="suggestions"></div>
+        </section>
+
+        <output id="math-announce" class="sr-only" aria-live="polite"></output>
+
+        <p class="hints">
+            click panel to switch mode &middot;
+            <kbd>&larr;</kbd><kbd>&rarr;</kbd> navigate &middot;
+            <kbd>Esc</kbd> toggle mode &middot;
+            <kbd>\</kbd> starts a command
+        </p>
+    </div>
+
+    <div class="examples">
+        <h2>Examples</h2>
+        <div class="example-grid">
+            <button type="button">x^2 + 3x - 7</button>
+            <button type="button">\frac{a+b}{2}</button>
+            <button type="button">\sqrt{r^2 + s^2}</button>
+            <button type="button">x_{1,2} = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}</button>
+            <button type="button">\sum_{k=1}^{n} k = \frac{n(n+1)}{2}</button>
+            <button type="button">\int_{0}^{\pi} \sin x</button>
+            <button type="button">\vec{a} \cdot \vec{b}</button>
+            <button type="button">\binom{n}{k}</button>
+            <button type="button">A \cup B = B \cup A</button>
+            <button type="button">x \in \R, x \neq 0</button>
+            <button type="button">\lim_{x \to \infty} \frac{1}{x} = 0</button>
+            <button type="button">\sqrt[3]{8} = 2</button>
+            <button type="button">f'(x) = 2x</button>
+            <button type="button">3^{-2} = \frac{1}{3^2}</button>
+            <button type="button">\triangle ABC \sim \triangle DEF</button>
+            <button type="button">1/2 + 3/4</button>
+            <button type="button">(a+b)/(c-d)</button>
+        </div>
+    </div>
+
+    <details class="debug">
+        <summary>Debug &amp; Parse Tree</summary>
+        <pre id="debug-out"></pre>
+    </details>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
