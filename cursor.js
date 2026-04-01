@@ -10,10 +10,22 @@ export function findBestElement(cursorPos, mathDisplay) {
         candidates.push({ el, s: +el.dataset.s, e: +el.dataset.e, depth: childrenWithPos.length });
     });
 
+    // First pass: cursor strictly inside an element → prefer smallest (leaf)
     candidates.sort((a, b) => {
         const rangeA = a.e - a.s, rangeB = b.e - b.s;
         if (rangeA !== rangeB) return rangeA - rangeB;
         return a.depth - b.depth;
+    });
+
+    for (const c of candidates) {
+        if (cursorPos > c.s && cursorPos < c.e) return c;
+    }
+
+    // Second pass: cursor at boundary → prefer largest (container)
+    // so cursor appears before/after the whole structure, not inside a sub-element
+    candidates.sort((a, b) => {
+        const rangeA = a.e - a.s, rangeB = b.e - b.s;
+        return rangeB - rangeA;
     });
 
     for (const c of candidates) {
