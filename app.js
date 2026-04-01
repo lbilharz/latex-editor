@@ -605,24 +605,39 @@ function applyValidationMarks(marks) {
     const mathTag = mathDisplay.querySelector('math');
     if (!mathTag) return;
 
+    // Step 1: mark leaf elements
     const elements = mathTag.querySelectorAll('[data-s][data-e]');
     for (const el of elements) {
         const s = +el.dataset.s;
         const e = +el.dataset.e;
-        // Skip structural wrappers (mrow etc) — only mark leaf elements
-        if (el.querySelector('[data-s]')) continue;
+        if (el.querySelector('[data-s]')) continue; // skip parents for now
 
         for (const m of marks) {
-            // Check overlap
             if (s >= m.start && e <= m.end || m.start >= s && m.start < e) {
-                if (m.status === 'correct') {
-                    el.classList.add('mark-correct');
-                } else {
-                    el.classList.add('mark-incorrect');
-                }
+                el.classList.add(m.status === 'correct' ? 'mark-correct' : 'mark-incorrect');
                 break;
             }
         }
+    }
+
+    // Step 2: propagate to parents — if ALL child [data-s] elements
+    // share the same mark, apply it to the parent too
+    const parents = Array.from(elements).filter(el => el.querySelector('[data-s]'));
+    // Process innermost parents first (reverse DOM order works for flat structures)
+    parents.reverse();
+    for (const el of parents) {
+        const children = el.querySelectorAll(':scope > [data-s]');
+        if (children.length === 0) continue;
+        let allCorrect = true;
+        let allIncorrect = true;
+        let anyMarked = false;
+        for (const child of children) {
+            if (child.classList.contains('mark-correct')) { allIncorrect = false; anyMarked = true; }
+            else if (child.classList.contains('mark-incorrect')) { allCorrect = false; anyMarked = true; }
+            else { allCorrect = false; allIncorrect = false; }
+        }
+        if (anyMarked && allCorrect) el.classList.add('mark-correct');
+        else if (anyMarked && allIncorrect) el.classList.add('mark-incorrect');
     }
 }
 

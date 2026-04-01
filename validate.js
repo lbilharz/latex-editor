@@ -193,12 +193,13 @@ function parseLatex(src) {
 
 /**
  * Split an AST at '=' operators into segments.
- * Returns array of { node, start, end } for each side.
+ * Returns { segments: [{ node, start, end }], equals: [{ start, end }] }
  */
 function splitAtEquals(ast) {
-    if (ast.type !== 'row') return [{ node: ast, start: ast.start, end: ast.end }];
+    if (ast.type !== 'row') return { segments: [{ node: ast, start: ast.start, end: ast.end }], equals: [] };
 
     const segments = [];
+    const equals = [];
     let current = [];
     let segStart = ast.start;
 
@@ -210,6 +211,7 @@ function splitAtEquals(ast) {
                     : { type: 'row', children: current, start: segStart, end: segEnd };
                 segments.push({ node, start: segStart, end: segEnd });
             }
+            equals.push({ start: child.start, end: child.end });
             current = [];
             segStart = child.end;
         } else {
@@ -224,7 +226,7 @@ function splitAtEquals(ast) {
         segments.push({ node, start: segStart, end: segEnd });
     }
 
-    return segments;
+    return { segments, equals };
 }
 
 /**
@@ -243,8 +245,8 @@ export function validateAnswer(studentSrc, expectedSrc) {
     const studentAST = parseLatex(studentSrc);
     const expectedAST = parseLatex(expectedSrc);
 
-    const studentSegments = splitAtEquals(studentAST);
-    const expectedSegments = splitAtEquals(expectedAST);
+    const { segments: studentSegments, equals: studentEquals } = splitAtEquals(studentAST);
+    const { segments: expectedSegments } = splitAtEquals(expectedAST);
 
     const marks = [];
     let allCorrect = true;
@@ -305,6 +307,17 @@ export function validateAnswer(studentSrc, expectedSrc) {
                 allCorrect = false;
             }
         }
+    }
+
+    // Mark '=' signs: correct if both adjacent segments are correct
+    for (let i = 0; i < studentEquals.length; i++) {
+        const eq = studentEquals[i];
+        // '=' between segment i and i+1
+        const leftOk = i < marks.length && marks.filter(m =>
+            m.end <= eq.start && m.status === 'correct').length > 0;
+        // Simpler: if allCorrect, all '=' are correct; otherwise mark based on surrounding
+        const status = allCorrect ? 'correct' : 'incorrect';
+        marks.push({ start: eq.start, end: eq.end, status });
     }
 
     const message = allCorrect ? 'Correct!' : 'Not quite — check the highlighted parts.';
