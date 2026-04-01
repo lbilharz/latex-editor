@@ -15,9 +15,9 @@
     <div class="editor" role="group" aria-label="Math formula editor">
         <!-- Upper section: MathML display + toolbar -->
         <section class="editor-upper mode-inactive">
-            <label class="section-label">Visual Preview</label>
+            <label class="section-label">Visual MathML editing</label>
             <div id="math-display" class="math-display" tabindex="0" aria-hidden="true">
-                <span class="placeholder" id="placeholder">Your formula appears here</span>
+                <span class="placeholder" id="placeholder">Click here to navigate the rendered formula</span>
                 <span class="cursor" id="cursor"></span>
             </div>
             <div class="math-toolbar" id="math-toolbar" role="toolbar" aria-label="Insert math structures">
@@ -33,7 +33,7 @@
 
         <!-- Lower section: LaTeX source + suggestions -->
         <section class="editor-lower">
-            <label class="section-label" for="latex-src">LaTeX Source</label>
+            <label class="section-label" for="latex-src">Linear LaTeX editing</label>
             <div class="source-row">
                 <input type="text"
                        id="latex-src"
@@ -84,10 +84,10 @@
     <section class="how-to" aria-label="How to use">
         <h2>How to use</h2>
         <ol class="steps">
-            <li><strong>Type LaTeX</strong> in the source field — it renders above in real time</li>
+            <li><strong>Type LaTeX</strong> in the lower field — the formula renders above in real time</li>
             <li><strong>Use the toolbar</strong> to insert fractions, roots, powers, and more</li>
-            <li><strong>Click the preview</strong> to navigate visually through the formula</li>
-            <li>Press <kbd>Esc</kbd> to <strong>switch between modes</strong> — source editing and visual navigation</li>
+            <li><strong>Click the formula</strong> to switch to visual editing — navigate with arrow keys</li>
+            <li>Press <kbd>Esc</kbd> to <strong>switch between modes</strong> — both are full editing modes</li>
         </ol>
     </section>
 

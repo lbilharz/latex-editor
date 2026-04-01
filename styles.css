@@ -61,6 +61,14 @@ h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
     box-shadow: inset 0 0 0 2px rgba(67, 97, 238, 0.15);
 }
 
+.editor-upper.mode-active .section-label {
+    color: #4361ee;
+}
+
+.editor-lower:not(.mode-inactive) .section-label {
+    color: #4361ee;
+}
+
 .editor-upper.mode-inactive .math-display {
     opacity: 0.55;
 }
