@@ -578,6 +578,7 @@ mathDisplay.addEventListener('keydown', (e) => {
 
     if (e.key === 'Backspace') {
         e.preventDefault();
+        clearValidationMarks();
         if (mathCursorPos > 0) {
             const del = findStructuralDelete(currentAST, mathCursorPos, 'backward');
             if (del) {
@@ -597,6 +598,7 @@ mathDisplay.addEventListener('keydown', (e) => {
 
     if (e.key === 'Delete') {
         e.preventDefault();
+        clearValidationMarks();
         if (mathCursorPos < src.length) {
             const del = findStructuralDelete(currentAST, mathCursorPos, 'forward');
             if (del) {
@@ -631,6 +633,7 @@ mathDisplay.addEventListener('keydown', (e) => {
 
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
+        clearValidationMarks();
         input.value = src.slice(0, mathCursorPos) + e.key + src.slice(mathCursorPos);
         mathCursorPos++;
         lastValue = '';
