@@ -131,6 +131,122 @@ export function clickToSourcePos(e, mathDisplay) {
     return Math.round(s + ratio * (end - s));
 }
 
+// ── Structural Selection helpers ──
+
+/**
+ * Given a click event, find the smallest leaf element with data-s/data-e.
+ * Returns { start, end, el } or null.
+ */
+export function clickToNode(e, mathDisplay) {
+    const mathTag = mathDisplay.querySelector('math');
+    if (!mathTag) return null;
+
+    const allEls = mathTag.querySelectorAll('[data-s][data-e]');
+    let best = null;
+    let bestRange = Infinity;
+
+    let bestIsLeaf = false;
+
+    for (const el of allEls) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) continue;
+        if (e.clientX >= rect.left - 2 && e.clientX <= rect.right + 2 &&
+            e.clientY >= rect.top - 2 && e.clientY <= rect.bottom + 2) {
+            const isLeaf = !el.querySelector('[data-s]');
+            const range = (+el.dataset.e) - (+el.dataset.s);
+            // Leaves get priority; among same leaf-ness, prefer smallest range
+            if (isLeaf && (!best || !bestIsLeaf || range < bestRange)) {
+                bestRange = range;
+                bestIsLeaf = true;
+                best = el;
+            } else if (!isLeaf && !best) {
+                bestRange = range;
+                best = el;
+            }
+        }
+    }
+
+    if (!best) return null;
+    return { start: +best.dataset.s, end: +best.dataset.e, el: best };
+}
+
+/**
+ * Find the next or previous sibling node at the same tree level.
+ * direction: 'left' or 'right'
+ */
+export function findSiblingNode(currentSel, direction, mathDisplay) {
+    if (!currentSel || !currentSel.el) return null;
+    const parent = currentSel.el.parentElement;
+    if (!parent) return null;
+
+    // Collect direct children of parent that have data-s/data-e
+    const siblings = Array.from(parent.children).filter(
+        el => el.hasAttribute('data-s') && el.hasAttribute('data-e')
+    );
+    const idx = siblings.indexOf(currentSel.el);
+    if (idx === -1) return null;
+
+    const newIdx = direction === 'left' ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= siblings.length) return null;
+
+    const el = siblings[newIdx];
+    return { start: +el.dataset.s, end: +el.dataset.e, el };
+}
+
+/**
+ * Find the parent node (the nearest ancestor with data-s/data-e).
+ */
+export function findParentNode(currentSel, mathDisplay) {
+    if (!currentSel || !currentSel.el) return null;
+    let parent = currentSel.el.parentElement;
+    while (parent) {
+        if (parent.hasAttribute && parent.hasAttribute('data-s') && parent.hasAttribute('data-e')) {
+            return { start: +parent.dataset.s, end: +parent.dataset.e, el: parent };
+        }
+        parent = parent.parentElement;
+    }
+    return null;
+}
+
+/**
+ * Find the first child node (first child with data-s/data-e).
+ */
+export function findChildNode(currentSel, mathDisplay) {
+    if (!currentSel || !currentSel.el) return null;
+    const child = currentSel.el.querySelector('[data-s][data-e]');
+    if (!child || child === currentSel.el) return null;
+    return { start: +child.dataset.s, end: +child.dataset.e, el: child };
+}
+
+/**
+ * Add node-selected class to the given element, removing from all others.
+ */
+export function highlightNode(sel, mathDisplay) {
+    clearNodeSelection(mathDisplay);
+    if (sel && sel.el) {
+        sel.el.classList.add('node-selected');
+    }
+}
+
+/**
+ * Remove all node-selected classes from mathDisplay.
+ */
+export function clearNodeSelection(mathDisplay) {
+    mathDisplay.querySelectorAll('.node-selected').forEach(el => {
+        el.classList.remove('node-selected');
+    });
+}
+
+/**
+ * Find the nearest selectable node to a given source position.
+ * Returns { start, end, el } or null.
+ */
+export function findNodeAtPos(pos, mathDisplay) {
+    const best = findBestElement(pos, mathDisplay);
+    if (!best) return null;
+    return { start: best.s, end: best.e, el: best.el };
+}
+
 export function getNavigableStops(ast, srcLen) {
     const stops = new Set([0, srcLen]);
 

@@ -4,7 +4,7 @@ import { SYMBOLS, FUNCTIONS, LARGE_OPS } from './data.js';
 import { tokenize } from './tokenizer.js';
 import { Parser } from './parser.js';
 import { toMathML } from './renderer.js';
-import { updateCursor, clickToSourcePos, getNavigableStops } from './cursor.js';
+import { updateCursor, clickToSourcePos, getNavigableStops, clickToNode, findSiblingNode, findParentNode, findChildNode, highlightNode, clearNodeSelection, findNodeAtPos } from './cursor.js';
 import { collectErrors } from './errors.js';
 import { validateAnswer } from './validate.js';
 
@@ -35,6 +35,7 @@ let activeMode = 'latex';
 let mathCursorPos = 0;
 let currentAST = null;
 let navigableStops = [];
+let selectedNode = null;    // { start, end, el } — structural selection in MathML mode
 let currentExercise = null; // { prompt, answer }
 
 
@@ -265,8 +266,13 @@ function findNextEmptyGroup(ast, pos, forward) {
 function render() {
     const src = input.value;
     if (src && src === lastValue && mathDisplay.querySelector('math')) {
-        const cp = activeMode === 'latex' ? input.selectionStart : mathCursorPos;
-        updateCursor(cp, mathDisplay, cursorEl);
+        if (activeMode === 'mathml' && selectedNode) {
+            highlightNode(selectedNode, mathDisplay);
+            cursorEl.style.display = 'none';
+        } else {
+            const cp = activeMode === 'latex' ? input.selectionStart : mathCursorPos;
+            updateCursor(cp, mathDisplay, cursorEl);
+        }
         return;
     }
     lastValue = src;
@@ -311,8 +317,15 @@ function render() {
     template.innerHTML = mathml;
     mathDisplay.insertBefore(template.content.firstChild, cursorEl);
 
-    const cursorPos = activeMode === 'latex' ? input.selectionStart : mathCursorPos;
-    updateCursor(cursorPos, mathDisplay, cursorEl);
+    if (activeMode === 'mathml' && selectedNode) {
+        // Re-find the node after re-render (DOM elements are new)
+        selectedNode = findNodeAtPos(selectedNode.start, mathDisplay);
+        highlightNode(selectedNode, mathDisplay);
+        cursorEl.style.display = 'none';
+    } else {
+        const cursorPos = activeMode === 'latex' ? input.selectionStart : mathCursorPos;
+        updateCursor(cursorPos, mathDisplay, cursorEl);
+    }
 
     const mathEl = mathDisplay.querySelector('math');
     if (mathEl) {
@@ -479,10 +492,20 @@ function setMode(newMode) {
         input.blur();
         mathDisplay.focus();
         suggestions.innerHTML = '';
+        // Select the node nearest to the current cursor position
+        selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
     } else {
         activeMode = 'latex';
-        input.focus();
-        input.setSelectionRange(mathCursorPos, mathCursorPos);
+        // If a node was selected, select that range in the input
+        if (selectedNode) {
+            input.focus();
+            input.setSelectionRange(selectedNode.start, selectedNode.end);
+        } else {
+            input.focus();
+            input.setSelectionRange(mathCursorPos, mathCursorPos);
+        }
+        selectedNode = null;
+        clearNodeSelection(mathDisplay);
     }
 
     updateModeVisuals();
@@ -504,8 +527,15 @@ function syncVisual() {
         }
     } else {
         clearSelectionOverlays();
-        updateCursor(mathCursorPos, mathDisplay, cursorEl);
-        cursorEl.style.display = 'block';
+        // In MathML mode: use structural highlight instead of blinking cursor
+        if (selectedNode) {
+            cursorEl.style.display = 'none';
+            highlightNode(selectedNode, mathDisplay);
+        } else {
+            clearNodeSelection(mathDisplay);
+            updateCursor(mathCursorPos, mathDisplay, cursorEl);
+            cursorEl.style.display = 'block';
+        }
     }
 }
 
@@ -560,26 +590,64 @@ mathDisplay.addEventListener('keydown', (e) => {
 
     if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        const idx = navigableStops.indexOf(mathCursorPos);
-        if (idx > 0) mathCursorPos = navigableStops[idx - 1];
-        else if (idx === -1) mathCursorPos = snapToNearestStop(mathCursorPos);
+        if (selectedNode) {
+            const sib = findSiblingNode(selectedNode, 'left', mathDisplay);
+            if (sib) { selectedNode = sib; mathCursorPos = sib.start; }
+        } else {
+            const idx = navigableStops.indexOf(mathCursorPos);
+            if (idx > 0) mathCursorPos = navigableStops[idx - 1];
+            else if (idx === -1) mathCursorPos = snapToNearestStop(mathCursorPos);
+            selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
+        }
         syncVisual();
         return;
     }
 
     if (e.key === 'ArrowRight') {
         e.preventDefault();
-        const idx = navigableStops.indexOf(mathCursorPos);
-        if (idx >= 0 && idx < navigableStops.length - 1) mathCursorPos = navigableStops[idx + 1];
-        else if (idx === -1) mathCursorPos = snapToNearestStop(mathCursorPos);
+        if (selectedNode) {
+            const sib = findSiblingNode(selectedNode, 'right', mathDisplay);
+            if (sib) { selectedNode = sib; mathCursorPos = sib.start; }
+        } else {
+            const idx = navigableStops.indexOf(mathCursorPos);
+            if (idx >= 0 && idx < navigableStops.length - 1) mathCursorPos = navigableStops[idx + 1];
+            else if (idx === -1) mathCursorPos = snapToNearestStop(mathCursorPos);
+            selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
+        }
         syncVisual();
         return;
     }
 
-    if (e.key === 'Backspace') {
+    if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (selectedNode) {
+            const parent = findParentNode(selectedNode, mathDisplay);
+            if (parent) { selectedNode = parent; mathCursorPos = parent.start; }
+        }
+        syncVisual();
+        return;
+    }
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (selectedNode) {
+            const child = findChildNode(selectedNode, mathDisplay);
+            if (child) { selectedNode = child; mathCursorPos = child.start; }
+        }
+        syncVisual();
+        return;
+    }
+
+    if (e.key === 'Backspace' || e.key === 'Delete') {
         e.preventDefault();
         clearValidationMarks();
-        if (mathCursorPos > 0) {
+
+        if (selectedNode) {
+            // Delete the selected node's source range
+            input.value = src.slice(0, selectedNode.start) + src.slice(selectedNode.end);
+            mathCursorPos = selectedNode.start;
+            selectedNode = null;
+        } else if (e.key === 'Backspace' && mathCursorPos > 0) {
             const del = findStructuralDelete(currentAST, mathCursorPos, 'backward');
             if (del) {
                 input.value = src.slice(0, del.start) + del.keep + src.slice(del.end);
@@ -588,29 +656,22 @@ mathDisplay.addEventListener('keydown', (e) => {
                 input.value = src.slice(0, mathCursorPos - 1) + src.slice(mathCursorPos);
                 mathCursorPos--;
             }
-            lastValue = '';
-            render();
-            mathCursorPos = snapToNearestStop(mathCursorPos);
-            syncVisual();
-        }
-        return;
-    }
-
-    if (e.key === 'Delete') {
-        e.preventDefault();
-        clearValidationMarks();
-        if (mathCursorPos < src.length) {
+        } else if (e.key === 'Delete' && mathCursorPos < src.length) {
             const del = findStructuralDelete(currentAST, mathCursorPos, 'forward');
             if (del) {
                 input.value = src.slice(0, del.start) + del.keep + src.slice(del.end);
             } else {
                 input.value = src.slice(0, mathCursorPos) + src.slice(mathCursorPos + 1);
             }
-            lastValue = '';
-            render();
-            mathCursorPos = snapToNearestStop(mathCursorPos);
-            syncVisual();
+        } else {
+            return;
         }
+
+        lastValue = '';
+        render();
+        mathCursorPos = snapToNearestStop(mathCursorPos);
+        selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
+        syncVisual();
         return;
     }
 
@@ -620,12 +681,23 @@ mathDisplay.addEventListener('keydown', (e) => {
         return;
     }
 
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        // Deselect — position insert point after selection
+        if (selectedNode) {
+            mathCursorPos = selectedNode.end;
+            selectedNode = null;
+        }
+        syncVisual();
+        return;
+    }
+
     if (e.key === 'Tab') {
         e.preventDefault();
-        // Jump to the next empty placeholder (e.g. from [] to {} in \sqrt[3]{})
         const nextEmpty = findNextEmptyGroup(currentAST, mathCursorPos, !e.shiftKey);
         if (nextEmpty !== null) {
             mathCursorPos = nextEmpty;
+            selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
             syncVisual();
         }
         return;
@@ -635,23 +707,26 @@ mathDisplay.addEventListener('keydown', (e) => {
         e.preventDefault();
         clearValidationMarks();
 
-        // Auto-expand structural characters to their braced form
-        const expansions = {
-            '^': '^{}',
-            '_': '_{}',
-        };
-        const expanded = expansions[e.key];
-        if (expanded) {
-            input.value = src.slice(0, mathCursorPos) + expanded + src.slice(mathCursorPos);
-            mathCursorPos += expanded.length - 1; // inside the braces
+        const insertPos = selectedNode ? selectedNode.start : mathCursorPos;
+        const deleteEnd = selectedNode ? selectedNode.end : mathCursorPos;
+
+        if (e.key === '^' || e.key === '_') {
+            // Wrap: insert ^{} or _{} after selected node (or at cursor)
+            const wrapPos = selectedNode ? selectedNode.end : mathCursorPos;
+            const expanded = e.key + '{}';
+            input.value = src.slice(0, wrapPos) + expanded + src.slice(wrapPos);
+            mathCursorPos = wrapPos + expanded.length - 1; // inside the braces
         } else {
-            input.value = src.slice(0, mathCursorPos) + e.key + src.slice(mathCursorPos);
-            mathCursorPos++;
+            // Replace selected node content, or insert at cursor
+            input.value = src.slice(0, insertPos) + e.key + src.slice(deleteEnd);
+            mathCursorPos = insertPos + 1;
         }
 
+        selectedNode = null;
         lastValue = '';
         render();
         mathCursorPos = snapToNearestStop(mathCursorPos);
+        selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
         syncVisual();
         return;
     }
@@ -662,6 +737,7 @@ mathDisplay.addEventListener('blur', () => {
         if (document.activeElement !== input) {
             cursorEl.style.display = 'none';
             clearSelectionOverlays();
+            clearNodeSelection(mathDisplay);
             upperSection.classList.remove('mode-active');
             input.classList.remove('mode-active');
         }
@@ -675,15 +751,34 @@ mathDisplay.addEventListener('mousedown', (e) => {
         setMode('mathml');
     }
 
-    const pos = clickToSourcePos(e, mathDisplay);
-
-    if (pos !== null) {
-        mathCursorPos = snapToNearestStop(Math.max(0, Math.min(pos, input.value.length)));
+    // Structural selection: click selects a node
+    const node = clickToNode(e, mathDisplay);
+    if (node) {
+        selectedNode = node;
+        mathCursorPos = node.start;
     } else {
-        mathCursorPos = input.value.length;
+        // Click in empty area — fall back to position-based
+        const pos = clickToSourcePos(e, mathDisplay);
+        if (pos !== null) {
+            mathCursorPos = snapToNearestStop(Math.max(0, Math.min(pos, input.value.length)));
+        } else {
+            mathCursorPos = input.value.length;
+        }
+        selectedNode = findNodeAtPos(mathCursorPos, mathDisplay);
     }
 
     syncVisual();
+});
+
+// Double-click: switch to LaTeX mode with cursor at clicked position
+mathDisplay.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    const pos = clickToSourcePos(e, mathDisplay);
+    if (pos !== null) {
+        mathCursorPos = snapToNearestStop(Math.max(0, Math.min(pos, input.value.length)));
+    }
+    selectedNode = null;
+    setMode('latex');
 });
 
 
@@ -691,8 +786,8 @@ mathDisplay.addEventListener('mousedown', (e) => {
 
 function insertStructure(template, cursorOffset) {
     const src = input.value;
-    const pos = activeMode === 'latex' ? input.selectionStart : mathCursorPos;
-    const selEnd = activeMode === 'latex' ? input.selectionEnd : mathCursorPos;
+    const pos = activeMode === 'latex' ? input.selectionStart : (selectedNode ? selectedNode.end : mathCursorPos);
+    const selEnd = activeMode === 'latex' ? input.selectionEnd : (selectedNode ? selectedNode.end : mathCursorPos);
 
     input.value = src.slice(0, pos) + template + src.slice(selEnd);
     const newPos = pos + cursorOffset;
