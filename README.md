@@ -1,8 +1,8 @@
-# LaTeX Formula Editor
+# Accessible Math Editor
 
 **[Live Demo](https://latex-mathml-editor.vercel.app)**
 
-An accessible math formula editor for visually impaired students — and everyone working alongside them.
+An accessible math formula editor for visually impaired students — and everyone working alongside them. This repository provides a standalone, framework-agnostic NPM package (`@lbilharz/accessible-math-editor`) to drop an accessible math editor into any web project.
 
 ## Why
 
@@ -12,14 +12,65 @@ This editor takes the opposite approach: **LaTeX is the primary input.** It's li
 
 For sighted users, the same formula renders as native MathML in real time — fractions, roots, and all. Both views stay in sync. A visually impaired student types `\frac{a}{b}` and their teacher sees a rendered fraction. A teacher provides an example formula and the student reads it back on their Braille display.
 
+## Installation
+
+Install the package via npm:
+
+```bash
+npm install @lbilharz/accessible-math-editor
+```
+
+## Usage
+
+### 1. Drop-In Interactive UI Context
+
+You can instantly inject the fully accessible interactive editor—complete with toolbars, visual MathML rendering, and LaTeX text sync—into any empty `<div>`:
+
+```html
+<div id="editor-root"></div>
+```
+
+```javascript
+import { createMathEditor } from '@lbilharz/accessible-math-editor';
+// Import the styles
+import '@lbilharz/accessible-math-editor/style.css';
+
+// Initialize
+const container = document.getElementById('editor-root');
+const editor = createMathEditor(container);
+
+// Set or retrieve LaTeX values
+editor.value = "\\frac{1}{2}";
+```
+
+### 2. Headless API
+
+If you just want to render LaTeX strings directly to valid MathML without the UI overhead:
+
+```javascript
+import { renderMath } from '@lbilharz/accessible-math-editor/core';
+
+// Returns valid <math>...</math> XML string
+const xml = renderMath("\\sqrt{x}");
+```
+
+### 3. Engine API
+For raw AST or token manipulation:
+
+```js
+import { tokenize, Parser, toMathML, toMathCoreXML, collectErrors } from '@lbilharz/accessible-math-editor';
+
+const tokens = tokenize('\\frac{a}{b}');
+const ast = new Parser(tokens).parse();
+const mathml = toMathML(ast);
+```
+
 ## Editing Modes
 
 ### Linear LaTeX editing
-
 Type formulas as text. Autocomplete suggests commands as you type `\`. Full keyboard control.
 
 ### Visual structural editing
-
 Click the rendered formula to switch to visual mode. Instead of a text cursor, you **select whole elements** — a number, a variable, an operator, or an entire structure like a fraction or superscript.
 
 | Key | Action |
@@ -33,7 +84,7 @@ Click the rendered formula to switch to visual mode. Instead of a text cursor, y
 | `^` | Add superscript after selection |
 | `_` | Add subscript after selection |
 | `Tab` | Jump to next empty placeholder |
-| `Esc` | Switch to LaTeX mode (selected range highlighted in input) |
+| `Esc` | Switch to LaTeX mode |
 | Double-click | Switch to LaTeX mode at clicked position |
 
 This structural approach is more reliable than a text cursor in 2D math layout — you always know exactly what's selected.
@@ -44,45 +95,15 @@ This structural approach is more reliable than a text cursor in 2D math layout �
 LaTeX string → Tokenizer → Parser (AST) → MathML renderer → Browser native math
 ```
 
-- **Zero dependencies** — vanilla JS, no React, no build step
-- **Native MathML** — the browser handles math layout, not JavaScript
-- **~1200 lines** across 9 modules
-- **Dual-mode editing** — LaTeX source or structural visual navigation
+- **Framework-Agnostic** — Pure vanilla JS (`src/` compiles entirely decoupled)
+- **Native MathML** — The browser handles math layout natively, avoiding bulky JS shim injections.
+- **Built with Vite** — Emits fast, tree-shakable `.es.js` and `.umd.cjs` bundles.
 
-## Modules
-
-| File | Purpose |
-|------|---------|
-| `tokenizer.js` | Lexer: LaTeX source → token stream |
-| `parser.js` | Recursive descent parser → AST |
-| `renderer.js` | AST → MathML with source position attributes (`data-s`, `data-e`) |
-| `cursor.js` | Cursor positioning, structural node selection, click-to-node mapping |
-| `data.js` | Symbol tables (Greek, operators, functions) |
-| `errors.js` | Syntax error detection (unknown commands, missing args, unclosed delimiters) |
-| `validate.js` | Mock answer validation with arithmetic evaluation and term comparison |
-| `export.js` | MathML export for MathCore integration |
-| `app.js` | Mode switching, toolbar, suggestions, exercises, event handling |
-
-## npm package
-
-```js
-import { tokenize, Parser, toMathML, toMathCoreXML, collectErrors } from 'latex-editor';
-
-const tokens = tokenize('\\frac{a}{b}');
-const ast = new Parser(tokens).parse();
-const mathml = toMathML(ast);
-```
-
-## Running locally
+## Local Development & Tests
 
 ```bash
-python3 -m http.server 8090
-# open http://localhost:8090
-```
-
-## Tests
-
-```bash
+npm install
+npm run dev
 npm test
 ```
 
