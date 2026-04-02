@@ -109,9 +109,7 @@ npm test
 
 131 tests across 7 test files covering tokenizer, parser, renderer, navigation stops, error detection, validation, and MathML export.
 
-## Context
 
-This prototype is part of the bettermarks accessibility initiative ([BM-68839](https://bettermarks.atlassian.net/browse/BM-68839)), building an accessible alternative to the existing visual formula editor for visually impaired students.
 
 ## License
 

@@ -10,7 +10,6 @@ export function toMathCoreXML(ast, latexSource) {
         '<semantics>',
         mathml,
         `<annotation encoding="LaTeX">${escapeXml(latexSource)}</annotation>`,
-        '<annotation-xml encoding="bettermarks"/>',
         '</semantics>',
         '</math>'
     ].join('');

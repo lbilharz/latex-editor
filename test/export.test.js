@@ -27,11 +27,6 @@ describe('MathCore XML export', () => {
         expect(xml).toContain('<annotation encoding="LaTeX">\\frac{1}{2}</annotation>');
     });
 
-    it('includes bettermarks annotation-xml element', () => {
-        const xml = exportXML('x');
-        expect(xml).toContain('<annotation-xml encoding="bettermarks"/>');
-    });
-
     it('strips data-s and data-e attributes', () => {
         const xml = exportXML('x + y');
         expect(xml).not.toMatch(/data-s=/);
