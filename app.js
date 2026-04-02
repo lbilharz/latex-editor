@@ -831,13 +831,21 @@ mathDisplay.addEventListener('dblclick', (e) => {
 
 // ── Structure Buttons (generic via data attributes) ──
 
-function insertStructure(template, cursorOffset) {
+function insertStructure(template, cursorOffset, wrap) {
     const src = input.value;
-    const pos = activeMode === 'latex' ? input.selectionStart : (selectedNode ? selectedNode.end : mathCursorPos);
+    const pos = activeMode === 'latex' ? input.selectionStart : (selectedNode ? selectedNode.start : mathCursorPos);
     const selEnd = activeMode === 'latex' ? input.selectionEnd : (selectedNode ? selectedNode.end : mathCursorPos);
+    const selected = src.slice(pos, selEnd);
 
-    input.value = src.slice(0, pos) + template + src.slice(selEnd);
-    const newPos = pos + cursorOffset;
+    // If text is selected and button supports wrapping, place selection inside the structure
+    const hasSelection = selected && pos !== selEnd;
+    const filled = hasSelection && wrap
+        ? template.slice(0, cursorOffset) + selected + template.slice(cursorOffset)
+        : template;
+    input.value = src.slice(0, pos) + filled + src.slice(selEnd);
+    const newPos = hasSelection && wrap
+        ? pos + cursorOffset + selected.length
+        : pos + cursorOffset;
 
     lastValue = '';
 
@@ -861,7 +869,7 @@ document.querySelectorAll('.math-toolbar button[data-insert]').forEach(btn => {
         e.preventDefault(); // don't steal focus
     });
     btn.addEventListener('click', () => {
-        insertStructure(btn.dataset.insert, +(btn.dataset.offset || 0));
+        insertStructure(btn.dataset.insert, +(btn.dataset.offset || 0), btn.hasAttribute('data-wrap'));
     });
 });
 
