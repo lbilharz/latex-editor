@@ -7,7 +7,7 @@ export function findBestElement(cursorPos, mathDisplay) {
     const candidates = [];
     mathTag.querySelectorAll('[data-s][data-e]').forEach(el => {
         const childrenWithPos = el.querySelectorAll('[data-s]');
-        candidates.push({ el, s: +el.dataset.s, e: +el.dataset.e, depth: childrenWithPos.length });
+        candidates.push({ el, s: +el.getAttribute('data-s'), e: +el.getAttribute('data-e'), depth: childrenWithPos.length });
     });
 
     // Sort by smallest range first (leaf preference)
@@ -114,7 +114,7 @@ export function clickToSourcePos(e, mathDisplay) {
         if (rect.width === 0 || rect.height === 0) continue;
         if (e.clientX >= rect.left - 2 && e.clientX <= rect.right + 2 &&
             e.clientY >= rect.top - 2 && e.clientY <= rect.bottom + 2) {
-            const range = (+el.dataset.e) - (+el.dataset.s);
+            const range = (+el.getAttribute('data-e')) - (+el.getAttribute('data-s'));
             if (range < bestRange) {
                 bestRange = range;
                 best = el;
@@ -124,8 +124,8 @@ export function clickToSourcePos(e, mathDisplay) {
 
     if (!best) return null;
 
-    const s = +best.dataset.s;
-    const end = +best.dataset.e;
+    const s = +best.getAttribute('data-s');
+    const end = +best.getAttribute('data-e');
     const rect = best.getBoundingClientRect();
     const ratio = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0;
     return Math.round(s + ratio * (end - s));
@@ -153,7 +153,7 @@ export function clickToNode(e, mathDisplay) {
         if (e.clientX >= rect.left - 2 && e.clientX <= rect.right + 2 &&
             e.clientY >= rect.top - 2 && e.clientY <= rect.bottom + 2) {
             const isLeaf = !el.querySelector('[data-s]');
-            const range = (+el.dataset.e) - (+el.dataset.s);
+            const range = (+el.getAttribute('data-e')) - (+el.getAttribute('data-s'));
             // Leaves get priority; among same leaf-ness, prefer smallest range
             if (isLeaf && (!best || !bestIsLeaf || range < bestRange)) {
                 bestRange = range;
@@ -167,7 +167,7 @@ export function clickToNode(e, mathDisplay) {
     }
 
     if (!best) return null;
-    return { start: +best.dataset.s, end: +best.dataset.e, el: best };
+    return { start: +best.getAttribute('data-s'), end: +best.getAttribute('data-e'), el: best };
 }
 
 /**
@@ -190,7 +190,7 @@ export function findSiblingNode(currentSel, direction, mathDisplay) {
     if (newIdx < 0 || newIdx >= siblings.length) return null;
 
     const el = siblings[newIdx];
-    return { start: +el.dataset.s, end: +el.dataset.e, el };
+    return { start: +el.getAttribute('data-s'), end: +el.getAttribute('data-e'), el };
 }
 
 /**
@@ -201,7 +201,7 @@ export function findParentNode(currentSel, mathDisplay) {
     let parent = currentSel.el.parentElement;
     while (parent) {
         if (parent.hasAttribute && parent.hasAttribute('data-s') && parent.hasAttribute('data-e')) {
-            return { start: +parent.dataset.s, end: +parent.dataset.e, el: parent };
+            return { start: +parent.getAttribute('data-s'), end: +parent.getAttribute('data-e'), el: parent };
         }
         parent = parent.parentElement;
     }
@@ -215,7 +215,7 @@ export function findChildNode(currentSel, mathDisplay) {
     if (!currentSel || !currentSel.el) return null;
     const child = currentSel.el.querySelector('[data-s][data-e]');
     if (!child || child === currentSel.el) return null;
-    return { start: +child.dataset.s, end: +child.dataset.e, el: child };
+    return { start: +child.getAttribute('data-s'), end: +child.getAttribute('data-e'), el: child };
 }
 
 /**

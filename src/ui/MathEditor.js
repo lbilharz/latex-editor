@@ -283,10 +283,10 @@ export function createMathEditor(container, options = {}) {
         // Click an error to jump cursor to that position
         errorStrip.querySelectorAll('.error-item').forEach(item => {
             item.addEventListener('click', () => {
-                const pos = +item.dataset.start;
+                const pos = +item.getAttribute('data-start');
                 if (activeMode === 'latex') {
                     input.focus();
-                    input.setSelectionRange(pos, +item.dataset.end);
+                    input.setSelectionRange(pos, +item.getAttribute('data-end'));
                 } else {
                     mathCursorPos = snapToNearestStop(pos);
                 }
@@ -327,8 +327,8 @@ export function createMathEditor(container, options = {}) {
         const containerRect = mathDisplay.getBoundingClientRect();
     
         mathTag.querySelectorAll('[data-s][data-e]').forEach(el => {
-            const s = +el.dataset.s;
-            const e = +el.dataset.e;
+            const s = +el.getAttribute('data-s');
+            const e = +el.getAttribute('data-e');
             if (s >= selEnd || e <= selStart) return;
             if (el.querySelector('[data-s]')) return;
     
@@ -699,6 +699,14 @@ export function createMathEditor(container, options = {}) {
     
     mathDisplay.addEventListener('mousedown', (e) => {
         e.preventDefault();
+        
+        // If the editor is entirely empty, clicking the visual placeholder should 
+        // just jump directly to the linear input since there is no math to navigate.
+        if (!input.value.trim()) {
+            setMode('latex');
+            input.focus();
+            return;
+        }
     
         if (activeMode !== 'mathml') {
             setMode('mathml');

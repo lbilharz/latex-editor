@@ -1,5 +1,10 @@
 # Accessible Math Editor
 
+[![NPM Version](https://img.shields.io/npm/v/@lbilharz/accessible-math-editor.svg)](https://www.npmjs.com/package/@lbilharz/accessible-math-editor)
+[![CI Build](https://github.com/lbilharz/latex-editor/actions/workflows/publish.yml/badge.svg)](https://github.com/lbilharz/latex-editor/actions/workflows/publish.yml)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?logo=vercel)](https://latex-mathml-editor.vercel.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **[Live Demo](https://latex-mathml-editor.vercel.app)**
 
 An accessible math formula editor for visually impaired students — and everyone working alongside them. This repository provides a standalone, framework-agnostic NPM package (`@lbilharz/accessible-math-editor`) to drop an accessible math editor into any web project.
