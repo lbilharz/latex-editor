@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { tokenize } from '../tokenizer.js';
-import { Parser } from '../parser.js';
-import { toMathCoreXML } from '../export.js';
+import { tokenize } from '../src/tokenizer.js';
+import { Parser } from '../src/parser.js';
+import { toMathCoreXML } from '../src/export.js';
 
 function exportXML(src) {
     const tokens = tokenize(src);

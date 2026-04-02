@@ -1,21 +1,27 @@
 {
-  "name": "latex-editor",
+  "name": "@lbilharz/accessible-math-editor",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Accessible LaTeX formula editor for visually impaired students",
-  "main": "index.js",
-  "module": "index.js",
+  "main": "dist/accessible-math-editor.umd.js",
+  "module": "dist/accessible-math-editor.es.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/accessible-math-editor.es.js",
+      "require": "./dist/accessible-math-editor.umd.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
   "files": [
-    "tokenizer.js",
-    "parser.js",
-    "renderer.js",
-    "export.js",
-    "data.js",
-    "cursor.js",
-    "errors.js",
-    "index.js"
+    "dist",
+    "src"
   ],
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "serve": "python3 -m http.server 8090"
@@ -27,6 +33,8 @@
   "license": "MIT",
   "homepage": "https://latex-mathml-editor.vercel.app",
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.2",
+    "vite": "^8.0.3",
     "vitest": "^4.1.2"
   },
   "dependencies": {

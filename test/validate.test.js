@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { validateAnswer, extractLeaves, evaluate } from '../validate.js';
-import { tokenize } from '../tokenizer.js';
-import { Parser } from '../parser.js';
+import { validateAnswer, extractLeaves, evaluate } from '../src/validate.js';
+import { tokenize } from '../src/tokenizer.js';
+import { Parser } from '../src/parser.js';
 
 function parse(src) {
     const tokens = tokenize(src);

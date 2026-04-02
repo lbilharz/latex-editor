@@ -1,7 +1,7 @@
 // i18n.js — Internationalization with i18next + browser language detection
 
-import i18next from 'https://esm.sh/i18next@26';
-import LanguageDetector from 'https://esm.sh/i18next-browser-languagedetector@8';
+import i18next from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 import en from './locales/en.json' with { type: 'json' };
 import de from './locales/de.json' with { type: 'json' };
@@ -14,7 +14,7 @@ import es from './locales/es.json' with { type: 'json' };
 
 const SUPPORTED_LANGS = ['en', 'de', 'fr', 'nl', 'tr', 'uk', 'ar', 'es'];
 
-await i18next
+i18next
     .use(LanguageDetector)
     .init({
         fallbackLng: 'en',

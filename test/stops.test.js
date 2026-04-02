@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { tokenize } from '../tokenizer.js';
-import { Parser } from '../parser.js';
-import { getNavigableStops } from '../cursor.js';
+import { tokenize } from '../src/tokenizer.js';
+import { Parser } from '../src/parser.js';
+import { getNavigableStops } from '../src/cursor.js';
 
 function stops(src) {
   const tokens = tokenize(src);

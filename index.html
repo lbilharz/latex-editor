@@ -20,59 +20,7 @@
         <p class="subtitle" data-i18n="subtitle">Type a formula. See it rendered live. Fully accessible.</p>
     </header>
 
-    <div class="editor" role="group" data-i18n-aria-label="editorAriaLabel" aria-label="Math formula editor">
-        <!-- Upper section: MathML display + toolbar -->
-        <section class="editor-upper mode-inactive">
-            <label class="section-label" id="mathml-label"><span id="mode-name" data-i18n="visualMathml">Visual MathML editing</span><span class="mode-hints" id="mode-hints" style="display:none"><span class="cheat-nav"><kbd>&larr;</kbd><kbd>&rarr;</kbd> <span data-i18n="hintNav_move">move</span> <kbd>&uarr;</kbd> <span data-i18n="hintNav_parent">parent</span> <kbd>&darr;</kbd>/<kbd>Enter</kbd> <span data-i18n="hintNav_edit">edit</span></span><span class="cheat-edit"><kbd>&larr;</kbd><kbd>&rarr;</kbd> <span data-i18n="hintEdit_cursor">cursor</span> <kbd>&uarr;</kbd> <span data-i18n="hintEdit_navigate">navigate</span> <kbd>Esc</kbd> <span data-i18n="hintEdit_latex">LaTeX</span></span></span></label>
-            <div id="math-display" class="math-display" tabindex="0" aria-hidden="true">
-                <span class="placeholder" id="placeholder" data-i18n="placeholder">Click here to navigate the rendered formula</span>
-                <span class="cursor" id="cursor"></span>
-            </div>
-            <div class="math-toolbar" id="math-toolbar" role="toolbar" data-i18n-aria-label="toolbarAriaLabel" aria-label="Insert math structures">
-                <button type="button" data-insert="^{}" data-offset="2" aria-label="Insert superscript" data-i18n-title="btn_superscript" title="Superscript">x&sup2;</button>
-                <button type="button" data-insert="_{}" data-offset="2" aria-label="Insert subscript" data-i18n-title="btn_subscript" title="Subscript">x&#8345;</button>
-                <button type="button" data-insert="\frac{}{}" data-offset="6" data-wrap aria-label="Insert fraction" data-i18n-title="btn_fraction" title="Fraction">&frac12;</button>
-                <button type="button" data-insert="\sqrt{}" data-offset="6" data-wrap aria-label="Insert square root" data-i18n-title="btn_sqrt" title="Square root">&radic;</button>
-                <button type="button" data-insert="\sqrt[]{}" data-offset="6" data-wrap aria-label="Insert nth root" data-i18n-title="btn_nthroot" title="Nth root">&#8731;</button>
-                <button type="button" data-insert="()" data-offset="1" data-wrap aria-label="Insert parentheses" data-i18n-title="btn_parens" title="Parentheses">(&thinsp;)</button>
-                <button type="button" data-insert="\vec{}" data-offset="5" data-wrap aria-label="Insert vector" data-i18n-title="btn_vector" title="Vector">&#x20d7;</button>
-            </div>
-        </section>
-
-        <!-- Lower section: LaTeX source + suggestions -->
-        <section class="editor-lower">
-            <label class="section-label" for="latex-src" data-i18n="linearLatex">Linear LaTeX editing</label>
-            <div class="source-row">
-                <input type="text"
-                       id="latex-src"
-                       class="source-input"
-                       autocomplete="off"
-                       autocorrect="off"
-                       autocapitalize="off"
-                       spellcheck="false"
-                       data-i18n-placeholder="inputPlaceholder"
-                       placeholder="Start typing — e.g.  \frac{1}{2} + \sqrt{x}"
-                       data-i18n-aria-label="inputAriaLabel"
-                       aria-label="LaTeX formula source"
-                       aria-describedby="math-announce source-hint">
-            </div>
-            <div class="suggestions-row" id="suggestions"></div>
-            <p class="source-hint" id="source-hint" data-i18n="sourceHint">Type <kbd>\</kbd> to see available commands</p>
-            <div class="error-strip" id="error-strip" role="alert" hidden></div>
-        </section>
-
-        <output id="math-announce" class="sr-only" aria-live="polite"></output>
-
-        <!-- Exercise mode: prompt + check -->
-        <div class="exercise-bar" id="exercise-bar" hidden>
-            <div class="exercise-prompt" id="exercise-prompt"></div>
-            <div class="exercise-actions">
-                <button type="button" class="check-btn" id="check-btn" data-i18n="checkAnswer">Check answer</button>
-                <button type="button" class="exit-exercise-btn" id="exit-exercise-btn" data-i18n-aria-label="closeExercise" aria-label="Close exercise">&times;</button>
-            </div>
-            <div class="exercise-result" id="exercise-result" role="status" aria-live="polite"></div>
-        </div>
-    </div>
+    <div id="editor-root"></div>
 
     <!-- Examples — promoted, with readable labels -->
     <section class="examples" aria-label="Example formulas">

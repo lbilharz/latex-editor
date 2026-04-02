@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { tokenize } from '../tokenizer.js';
-import { Parser } from '../parser.js';
-import { collectErrors } from '../errors.js';
+import { tokenize } from '../src/tokenizer.js';
+import { Parser } from '../src/parser.js';
+import { collectErrors } from '../src/errors.js';
 
 function errors(src) {
     const tokens = tokenize(src);

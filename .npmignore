@@ -1,0 +1,7 @@
+test/
+.github/
+.gemini/
+app.js
+index.html
+refactor.cjs
+fix_test_imports.cjs

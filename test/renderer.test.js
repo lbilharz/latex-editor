@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { tokenize } from '../tokenizer.js';
-import { Parser } from '../parser.js';
-import { toMathML } from '../renderer.js';
+import { tokenize } from '../src/tokenizer.js';
+import { Parser } from '../src/parser.js';
+import { toMathML } from '../src/renderer.js';
 
 function render(src) {
   const tokens = tokenize(src);
