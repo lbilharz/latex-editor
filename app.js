@@ -33,6 +33,10 @@ const exitExBtn   = document.getElementById('exit-exercise-btn');
 
 let lastValue = '';
 let activeMode = 'latex';
+
+// Restore last input from localStorage
+const saved = localStorage.getItem('latex-editor-src');
+if (saved) input.value = saved;
 let mathCursorPos = 0;
 let currentAST = null;
 let navigableStops = [];
@@ -277,6 +281,7 @@ function render() {
         return;
     }
     lastValue = src;
+    localStorage.setItem('latex-editor-src', src);
 
     if (!src.trim()) {
         const existingMath = mathDisplay.querySelector('math');
@@ -1058,4 +1063,4 @@ i18next.on('languageChanged', (lng) => {
 
 updateModeVisuals();
 render();
-input.focus();
+setMode('mathml');
