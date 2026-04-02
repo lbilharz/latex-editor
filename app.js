@@ -900,7 +900,7 @@ if (showMoreBtn && moreExamples) {
 function enterExercise(prompt, answer, prefill) {
     currentExercise = { prompt, answer, prefill: prefill || '' };
     exerciseBar.hidden = false;
-    exercisePrompt.textContent = prompt;
+    exercisePrompt.textContent = t(prompt);
     exerciseResult.innerHTML = '';
     exerciseResult.className = 'exercise-result';
     clearValidationMarks();
@@ -1046,14 +1046,6 @@ i18next.on('languageChanged', (lng) => {
     applyTranslations();
     lastValue = ''; // force re-render
     render();
-});
-
-// Exercise prompts use i18n keys — translate them on click
-document.querySelectorAll('.exercise-grid button[data-prompt]').forEach(btn => {
-    const key = btn.getAttribute('data-prompt');
-    btn.addEventListener('click', () => {
-        exercisePrompt.textContent = t(key);
-    }, true); // capture phase: run before the main handler
 });
 
 updateModeVisuals();

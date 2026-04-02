@@ -11,7 +11,7 @@ export function setLocale(lang) {
 function formatNumber(raw) {
     // Only format integers or decimals with 5+ digits in integer part
     const match = raw.match(/^(\d+)(\.(\d+))?$/);
-    if (!match || match[1].length < 5) return raw;
+    if (!match || match[1].length < 4) return raw;
 
     const intPart = match[1];
     const decPart = match[3];
