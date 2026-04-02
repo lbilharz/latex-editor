@@ -6,7 +6,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const localesDir = join(__dirname, '..', 'locales');
+const localesDir = join(__dirname, '..', 'src', 'locales');
 
 const enPath = join(localesDir, 'en.json');
 const en = JSON.parse(readFileSync(enPath, 'utf8'));

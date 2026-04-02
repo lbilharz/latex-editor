@@ -22,6 +22,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:demo": "BUILD_DEMO=true vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "serve": "python3 -m http.server 8090"
