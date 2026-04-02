@@ -1063,4 +1063,9 @@ i18next.on('languageChanged', (lng) => {
 
 updateModeVisuals();
 render();
-setMode('mathml');
+// Start in MathML Edit mode with cursor at end
+activeMode = 'mathml';
+mathCursorPos = snapToNearestStop(input.value.length);
+selectedNode = null;
+mathDisplay.focus();
+syncVisual();
