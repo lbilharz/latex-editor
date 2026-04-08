@@ -223,7 +223,8 @@ export function createMathEditor(container, options = {}) {
         const errors = collectErrors(ast, src);
         displayErrors(errors);
     
-        const mathml = `<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">${toMathML(ast)}</math>`;
+        const escaped = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        const mathml = `<math display="block" xmlns="http://www.w3.org/1998/Math/MathML" aria-label="${escaped}">${toMathML(ast)}</math>`;
     
         const existing = mathDisplay.querySelector('math');
         if (existing) existing.remove();

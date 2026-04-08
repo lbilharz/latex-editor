@@ -45,7 +45,7 @@ const container = document.getElementById('editor-root');
 const editor = createMathEditor(container);
 
 // Set or retrieve LaTeX values
-editor.value = "\\frac{1}{2}";
+editor.value = "\\sqrt{r^2 +s^2}";
 ```
 
 ### 2. Headless API
@@ -55,14 +55,16 @@ editor.value = "\\frac{1}{2}";
 ```javascript
 import { renderMath } from '@lbilharz/accessible-math-editor/core';
 
-// LaTeX → MathML
-const mathml = renderMath("\\sqrt{x}");
-// Returns: <math display="block" ...><msqrt><mi>x</mi></msqrt></math>
+// LaTeX → MathML (includes aria-label with the LaTeX source)
+const mathml = renderMath("\\sqrt{r^2 +s^2}");
+// Returns: <math display="block" ... aria-label="\sqrt{r^2 +s^2}"><msqrt>...</msqrt></math>
 
 // MathML → LaTeX
 const latex = renderMath('<math><mfrac><mn>1</mn><mn>2</mn></mfrac></math>');
 // Returns: \frac{1}{2}
 ```
+
+Every `<math>` element gets an `aria-label` containing the LaTeX source, so screen readers announce the formula as linear text.
 
 You can also use `mathmlToLatex` directly for MathML DOM elements or strings:
 

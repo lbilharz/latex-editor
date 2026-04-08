@@ -14,11 +14,11 @@ export const SYMBOLS = {
     // Number sets
     '\\N':'ℕ','\\Z':'ℤ','\\Q':'ℚ','\\R':'ℝ','\\C':'ℂ',
     // Misc symbols
-    '\\infty':'∞','\\partial':'∂','\\nabla':'∇','\\emptyset':'∅',
+    '\\infty':'∞','\\partial':'∂','\\nabla':'∇','\\emptyset':'∅','\\O':'∅',
     '\\forall':'∀','\\exists':'∃','\\neg':'¬',
     // Operators
     '\\pm':'±','\\mp':'∓','\\times':'×','\\cdot':'·','\\div':'÷',
-    '\\circ':'∘','\\bullet':'•','\\star':'⋆',
+    '\\circ':'∘','\\bullet':'•','\\star':'⋆','\\odot':'⊙',
     // Relations
     '\\leq':'≤','\\le':'≤','\\geq':'≥','\\ge':'≥',
     '\\neq':'≠','\\ne':'≠',

@@ -24,5 +24,6 @@ export function renderMath(input) {
     const tokens = tokenize(trimmed);
     const parser = new Parser(tokens, trimmed.length);
     const ast = parser.parse();
-    return `<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">${toMathML(ast)}</math>`;
+    const escaped = trimmed.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    return `<math display="block" xmlns="http://www.w3.org/1998/Math/MathML" aria-label="${escaped}">${toMathML(ast)}</math>`;
 }

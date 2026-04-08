@@ -199,6 +199,20 @@ export class Parser {
             return { type: 'textbox', body, start: t.start, end: body.end };
         }
 
+        // \not prefix: combine with next operator to form negated symbol
+        if (cmd === '\\not') {
+            const next = this.peek();
+            const NEGATIONS = { '|': '∤', '||': '∦', '=': '≠', '<': '≮', '>': '≯', '\\in': '∉', '\\subset': '⊄', '\\subseteq': '⊈' };
+            if (next) {
+                const nextVal = next.value;
+                if (NEGATIONS[nextVal]) {
+                    this.advance();
+                    return { type: 'symbol-op', value: NEGATIONS[nextVal], start: t.start, end: next.end };
+                }
+            }
+            return { type: 'symbol-op', value: '¬', start: t.start, end: t.end };
+        }
+
         if (LARGE_OPS[cmd]) {
             return { type: 'largeop', value: LARGE_OPS[cmd], start: t.start, end: t.end };
         }
