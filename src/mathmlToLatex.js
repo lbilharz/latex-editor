@@ -37,6 +37,25 @@ export function mathmlToLatex(input) {
     return convertNode(root).trim();
 }
 
+/**
+ * Find all <math> elements inside a DOM subtree and add aria-label
+ * with the LaTeX equivalent wherever one is missing.
+ * @param {Element|Document} [root=document] — DOM subtree to scan
+ * @returns {number} number of elements labelled
+ */
+export function labelMath(root) {
+    const container = root || document;
+    const mathEls = container.querySelectorAll('math:not([aria-label])');
+    let count = 0;
+    for (const el of mathEls) {
+        try {
+            el.setAttribute('aria-label', mathmlToLatex(el));
+            count++;
+        } catch { /* skip malformed elements */ }
+    }
+    return count;
+}
+
 function convertNode(node) {
     if (node.nodeType === 3) { // text node
         return node.textContent.trim();

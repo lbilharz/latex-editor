@@ -66,12 +66,15 @@ const latex = renderMath('<math><mfrac><mn>1</mn><mn>2</mn></mfrac></math>');
 
 Every `<math>` element gets an `aria-label` containing the LaTeX source, so screen readers announce the formula as linear text.
 
-You can also use `mathmlToLatex` directly for MathML DOM elements or strings:
+You can also retrofit accessibility onto any page that already contains MathML:
 
 ```javascript
-import { mathmlToLatex } from '@lbilharz/accessible-math-editor';
+import { labelMath } from '@lbilharz/accessible-math-editor';
 
-const latex = mathmlToLatex(document.querySelector('math'));
+// Scan the page for <math> elements without aria-label and add one
+// with the LaTeX equivalent so screen readers can announce formulas.
+labelMath();                 // scans entire document
+labelMath(myContainer);      // scans a specific subtree
 ```
 
 ### 3. Engine API

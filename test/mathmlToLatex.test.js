@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { mathmlToLatex } from '../src/mathmlToLatex.js';
+import { mathmlToLatex, labelMath } from '../src/mathmlToLatex.js';
 import { renderMath } from '../src/core.js';
 
 describe('mathmlToLatex', () => {
@@ -104,5 +104,31 @@ describe('renderMath bidirectional', () => {
     it('returns empty string for empty input', () => {
         expect(renderMath('')).toBe('');
         expect(renderMath('  ')).toBe('');
+    });
+});
+
+describe('labelMath', () => {
+    it('adds aria-label to <math> elements without one', () => {
+        const div = document.createElement('div');
+        div.innerHTML = '<math><mfrac><mn>1</mn><mn>2</mn></mfrac></math>';
+        expect(div.querySelector('math').hasAttribute('aria-label')).toBe(false);
+        const count = labelMath(div);
+        expect(count).toBe(1);
+        expect(div.querySelector('math').getAttribute('aria-label')).toBe('\\frac{1}{2}');
+    });
+
+    it('skips elements that already have aria-label', () => {
+        const div = document.createElement('div');
+        div.innerHTML = '<math aria-label="existing"><mi>x</mi></math>';
+        const count = labelMath(div);
+        expect(count).toBe(0);
+        expect(div.querySelector('math').getAttribute('aria-label')).toBe('existing');
+    });
+
+    it('labels multiple elements at once', () => {
+        const div = document.createElement('div');
+        div.innerHTML = '<math><mi>x</mi></math><math><mn>3</mn></math>';
+        const count = labelMath(div);
+        expect(count).toBe(2);
     });
 });
