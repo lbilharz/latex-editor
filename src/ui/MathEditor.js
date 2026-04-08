@@ -710,8 +710,10 @@ export function createMathEditor(container, options = {}) {
     
         if (activeMode !== 'mathml') {
             setMode('mathml');
+        } else {
+            mathDisplay.focus();
         }
-    
+
         // Structural selection: click selects a node
         const node = clickToNode(e, mathDisplay);
         if (node) {
@@ -940,6 +942,7 @@ export function createMathEditor(container, options = {}) {
         activeMode = 'mathml';
         mathCursorPos = snapToNearestStop(input.value.length);
         selectedNode = null;
+        mathDisplay.focus();
     }
     syncVisual();
 
