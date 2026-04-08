@@ -113,6 +113,7 @@ h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
 
 .math-display math {
     font-size: 1.6rem;
+    font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", math;
 }
 
 /* ── Math Toolbar — always visible ── */
@@ -337,22 +338,9 @@ h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
 }
 
 /* ── Structural highlights ── */
-/* Only apply hover/transition to leaf MathML elements (mn, mi, mo, mtext, mspace)
-   to avoid disrupting native layout of stretchy containers (msqrt, mfrac, etc.) */
-.math-display mn[data-s],
-.math-display mi[data-s],
-.math-display mo[data-s],
-.math-display mtext[data-s],
-.math-display mspace[data-s] {
-    border-radius: 2px;
-    transition: background 0.1s;
-}
-.math-display mn[data-s]:hover,
-.math-display mi[data-s]:hover,
-.math-display mo[data-s]:hover,
-.math-display mtext[data-s]:hover {
-    background: rgba(67, 97, 238, 0.07);
-}
+/* No CSS on MathML elements — any background, border-radius, or transition
+   disrupts native stretchy layout (msqrt, mfrac).
+   Hover/selection feedback uses outline or overlay divs only. */
 
 /* ── Navigate / Edit mode indicators ── */
 .math-display.mode-navigate {
