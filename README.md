@@ -50,13 +50,26 @@ editor.value = "\\frac{1}{2}";
 
 ### 2. Headless API
 
-If you just want to render LaTeX strings directly to valid MathML without the UI overhead:
+`renderMath` is bidirectional — it auto-detects the input format and converts in the opposite direction:
 
 ```javascript
 import { renderMath } from '@lbilharz/accessible-math-editor/core';
 
-// Returns valid <math>...</math> XML string
-const xml = renderMath("\\sqrt{x}");
+// LaTeX → MathML
+const mathml = renderMath("\\sqrt{x}");
+// Returns: <math display="block" ...><msqrt><mi>x</mi></msqrt></math>
+
+// MathML → LaTeX
+const latex = renderMath('<math><mfrac><mn>1</mn><mn>2</mn></mfrac></math>');
+// Returns: \frac{1}{2}
+```
+
+You can also use `mathmlToLatex` directly for MathML DOM elements or strings:
+
+```javascript
+import { mathmlToLatex } from '@lbilharz/accessible-math-editor';
+
+const latex = mathmlToLatex(document.querySelector('math'));
 ```
 
 ### 3. Engine API
@@ -98,6 +111,7 @@ This structural approach is more reliable than a text cursor in 2D math layout �
 
 ```
 LaTeX string → Tokenizer → Parser (AST) → MathML renderer → Browser native math
+MathML string/DOM → mathmlToLatex → LaTeX string
 ```
 
 - **Framework-Agnostic** — Pure vanilla JS (`src/` compiles entirely decoupled)
@@ -112,7 +126,7 @@ npm run dev
 npm test
 ```
 
-131 tests across 7 test files covering tokenizer, parser, renderer, navigation stops, error detection, validation, and MathML export.
+155 tests across 9 test files covering tokenizer, parser, renderer, MathML-to-LaTeX conversion, navigation stops, error detection, validation, and MathML export.
 
 
 

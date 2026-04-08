@@ -5,4 +5,5 @@ export { toMathCoreXML } from './export.js';
 export { getNavigableStops } from './cursor.js';
 export { collectErrors } from './errors.js';
 export { renderMath } from './core.js';
+export { mathmlToLatex } from './mathmlToLatex.js';
 export { createMathEditor } from './ui/MathEditor.js';
