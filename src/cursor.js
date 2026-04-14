@@ -91,9 +91,16 @@ export function updateCursor(cursorPos, mathDisplay, cursorEl) {
         x = rect.left + ratio * rect.width;
     }
 
+    // Enforce a minimum cursor height so it stays visible next to small elements
+    const mathRect = mathTag.getBoundingClientRect();
+    const minH = Math.max(20, mathRect.height * 0.4);
+    const h = Math.max(rect.height, minH);
+    // Center vertically on the element when cursor is taller than the element
+    const topOffset = rect.top - (h - rect.height) / 2;
+
     cursorEl.style.left   = (x - containerRect.left) + 'px';
-    cursorEl.style.top    = (rect.top - containerRect.top) + 'px';
-    cursorEl.style.height = rect.height + 'px';
+    cursorEl.style.top    = (topOffset - containerRect.top) + 'px';
+    cursorEl.style.height = h + 'px';
     cursorEl.style.display = 'block';
     // Restart blink animation
     cursorEl.style.animation = 'none';
@@ -256,6 +263,7 @@ export function getNavigableStops(ast, srcLen) {
             case 'number': case 'variable': case 'operator':
             case 'symbol-ident': case 'symbol-op': case 'function':
             case 'text': case 'largeop': case 'unknown':
+            case 'placeholder':
                 stops.add(node.start);
                 stops.add(node.end);
                 break;
